@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Velas de deseos</title>
-<meta name="app-version" content="2026-11-21-espacio-nombre">
+<meta name="app-version" content="2026-11-21-fueguitos">
 <meta name="theme-color" content="#f6f3ee">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3/dist/tabler-icons.min.css">
 <style>
@@ -278,6 +278,19 @@
   .sheet-body #nDyn .n-lbl, .sheet-body #nDyn > .f-lbl{margin-top:22px}
   .sheet-body label.n-lbl{display:block;margin:4px 0 8px}   /* <label> es en línea por defecto: sin display:block ignoraba el margen de abajo */
   .sheet-body .n-tg{margin-top:22px}
+  /* Casillas de deseos como fueguitos */
+  .f-op{position:relative;-webkit-user-select:none;user-select:none}
+  .f-op input{position:absolute;opacity:0;width:1px;height:1px;margin:0;pointer-events:none}
+  .f-op .fl{width:24px;height:24px;flex-shrink:0;display:flex;align-items:center;justify-content:center;border-radius:8px}
+  .f-op .fl svg{transition:transform 200ms var(--ease-out)}
+  .f-op .fl .o{fill:none;stroke:#b9ad9c;stroke-width:1.8;transition:fill 180ms ease,stroke 180ms ease}
+  .f-op .fl .i{fill:#fff3c4;opacity:0;transition:opacity 180ms ease}
+  .f-op input:checked + .fl .o{fill:var(--amb);stroke:#c9781e}
+  .f-op input:checked + .fl .i{opacity:1}
+  .f-op input:checked + .fl svg{transform:scale(1.08)}
+  .f-op input:disabled + .fl .o{stroke:#e2d9cc}
+  .f-op input:focus-visible + .fl{outline:2px solid var(--acc);outline-offset:2px}
+  @media (prefers-reduced-motion: reduce){ .f-op .fl svg{transition:none} .f-op input:checked + .fl svg{transform:none} }
 </style>
 </head>
 <body>
@@ -675,6 +688,8 @@
     return res;
   }
 
+  // Fueguito que se enciende al marcar un deseo
+  const FLAMA = '<span class="fl" aria-hidden="true"><svg width="22" height="24" viewBox="0 0 24 26"><path class="o" d="M12 2c.6 3.2 2.6 5 4.4 7 1.7 1.9 3.1 4 3.1 7.1A7.5 7.5 0 0 1 12 23.6a7.5 7.5 0 0 1-7.5-7.5c0-2.9 1.4-5 3-6.6.3 1.7 1.2 2.9 2.4 3.4C9.6 9.7 10.4 5.4 12 2z"/><path class="i" d="M12 13.5c1.6 1.4 3 2.8 3 4.8a3 3 0 0 1-6 0c0-1.7 1.3-3.2 3-4.8z"/></svg></span>';
   // Color + lista desplegable con casillas + "Así quedan los colores"
   function deseosUI(ctx, conColor = true) {
     const N = ctx.N, sel = ctx.sel, lleno = sel.length >= N;
@@ -685,7 +700,7 @@
       <div class="f-dd ${ctx.lista ? 'open' : ''}"><button type="button" class="f-dd-btn" data-acc="fdd" aria-expanded="${ctx.lista}">
         <span class="${sel.length ? '' : 'f-ph'}">${sel.length ? sel.map(esc).join(', ') : 'Elegir deseos…'}</span><i class="ti ti-chevron-down" aria-hidden="true"></i></button>`;
     if (ctx.lista) h += `<div class="f-opts">${lista.map(w => { const on = sel.includes(w), off = lleno && !on;
-        return `<label class="f-op ${off ? 'off' : ''}"><input type="checkbox" data-fw="${esc(w)}" ${on ? 'checked' : ''} ${off ? 'disabled' : ''}>${esc(w)}</label>`; }).join('')}
+        return `<label class="f-op ${off ? 'off' : ''}"><input type="checkbox" data-fw="${esc(w)}" ${on ? 'checked' : ''} ${off ? 'disabled' : ''}>${FLAMA}${esc(w)}</label>`; }).join('')}
         <div class="f-cnt"><span><b>${sel.length} de ${N}</b> elegidos</span><button type="button" data-acc="fdd">Listo</button></div></div>`;
     h += `</div>`;
     if (sel.length === N) {
