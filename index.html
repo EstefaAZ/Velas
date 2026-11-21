@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Velas de deseos</title>
-<meta name="app-version" content="2026-11-21-entregado">
+<meta name="app-version" content="2026-11-21-instrucciones">
 <meta name="theme-color" content="#f6f3ee">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3/dist/tabler-icons.min.css">
 <style>
@@ -271,6 +271,9 @@
   .acc-r{display:flex;gap:8px;margin-left:auto}
   .armado-el > .btn{margin-left:auto}
   .acc-r .btn{margin:0}
+  .nota-prev p{margin:0}
+  .nota-prev ol{margin:6px 0;padding-left:20px}
+  .nota-prev li{margin:2px 0}
 </style>
 </head>
 <body>
@@ -546,7 +549,9 @@
     // Recordatorio de previstas en la pestaña Sin deseos
     const totPrev = (D.previstas || []).reduce((a, r) => a + r.cantidad, 0);
     if (pestana === 's' && totPrev && !busqueda)
-      html = `<div class="nota-prev"><i class="ti ti-info-circle" aria-hidden="true"></i><span>Estas personas aún no eligen deseos, pero ya contamos <b>${totPrev} velas previstas</b> para ellas. Cuando te digan, toca su nombre; la app se encarga del resto.</span></div>` + html;
+      html = `<div class="nota-prev"><i class="ti ti-info-circle" aria-hidden="true"></i><div><p>Estas personas aún no eligen deseos, pero ya contamos <b>${totPrev} velas previstas</b> para ellas. Cuando te digan sus deseos:</p>
+        <ol><li>Toca su nombre.</li><li>Elige el color del paquete, si aún no lo tiene.</li><li>Marca sus deseos y toca <b>Guardar deseos</b>.</li></ol>
+        <p>La app reparte los colores de las velas y ajusta las previstas sola.</p></div></div>` + html;
     document.getElementById('paq').innerHTML = html || `<div class="vacio">${busqueda ? 'Nadie con ese nombre.' :
       pestana === 'p' ? 'No hay paquetes por armar.' : pestana === 's' ? 'Todos ya eligieron sus deseos.' : 'Todavía no hay paquetes armados.'}</div>`;
   }
