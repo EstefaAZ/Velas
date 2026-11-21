@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Velas de deseos</title>
-<meta name="app-version" content="2026-11-21-texto-previstas-2">
+<meta name="app-version" content="2026-11-21-boton-armar">
 <meta name="theme-color" content="#f6f3ee">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3/dist/tabler-icons.min.css">
 <style>
@@ -262,6 +262,10 @@
     .btn.main:not(:disabled):hover{background:#6c4427;border-color:#6c4427}
     .sheet-x:hover{background:rgba(255,255,255,.18)}
   }
+  /* Botón de armar: pequeño, con borde café y alineado a la derecha */
+  .det .btn-armar{width:auto;min-height:40px;margin:2px 0 0 auto;padding:0 16px;font-size:14px;border:1.5px solid var(--cafe);background:#fff;color:var(--cafe)}
+  .det .btn-armar.igual{border-color:var(--line2);color:var(--txt)}
+  @media (hover:hover) and (pointer:fine){ .det .btn-armar:hover{background:#fbf3e6} }
 </style>
 </head>
 <body>
@@ -603,8 +607,8 @@
     if (arm) acc = avisoSinInv + `<div class="armado-el"><span>Armado el ${esc(p.fecha)}</span><button class="btn link" data-acc="desarmar" data-id="${esc(p.id)}">Deshacer armado</button></div>`;
     else if (confirmId === p.id) acc = `<div class="confirma">Le faltan ${nf} velas en el inventario. ¿Lo marcas como armado igual?
         <div class="acc"><button class="btn" data-acc="cancelar">Cancelar</button><button class="btn main" data-acc="armarYa" data-id="${esc(p.id)}">Sí, armar</button></div></div>`;
-    else if (nf) acc = `<button class="btn" data-acc="armar" data-id="${esc(p.id)}" data-falta="1">Armar igual</button>`;
-    else acc = `<button class="btn main" data-acc="armar" data-id="${esc(p.id)}" data-falta="0"><i class="ti ti-check" aria-hidden="true"></i> Marcar como armado</button>`;
+    else if (nf) acc = `<button class="btn btn-armar igual" data-acc="armar" data-id="${esc(p.id)}" data-falta="1">Armar igual</button>`;
+    else acc = `<button class="btn btn-armar" data-acc="armar" data-id="${esc(p.id)}" data-falta="0">Marcar como armado</button>`;
     return `<div class="rw open">${cab}<div class="det"><div class="cols" style="grid-template-columns:repeat(${cols.length},minmax(0,1fr))">${cols.join('')}</div>${cuenta}${revisar}${apartadas}${acc}</div></div>`;
   }
 
