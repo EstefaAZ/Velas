@@ -12,7 +12,8 @@
     --txt:#2b2622; --txt2:#6f675e; --muted:#a39b90;
     --rojo:#c0392b; --rojo-bg:#fbeaea; --verde:#3b7a17; --verde-bg:#eaf3de;
     --rosa:#b03a68; --acc:#1f6fb2; --acc-bg:#e6f1fb; --warn:#8a5a00; --warn-bg:#fdf1d6;
-    --ok:#2f7a33; --ok-bg:#e5f3e6; --cafe:#7a4e2d;
+    --ok:#2f7a33; --ok-bg:#e5f3e6; --cafe:#7a4e2d; --amb:#e8a33a;
+    --ease-out:cubic-bezier(0.23,1,0.32,1);
   }
   *{box-sizing:border-box}
   html,body{margin:0;background:var(--bg);color:var(--txt);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-tap-highlight-color:transparent}
@@ -24,18 +25,32 @@
   .mt{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
   .mt small{display:block;font-size:12px;color:var(--txt2)}
   .mt b{font-size:24px;font-weight:600}
-  .box{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:4px 12px}
-  .head,.row{display:grid;grid-template-columns:1fr 104px 104px;gap:6px;align-items:center}
-  .head{font-size:12px;color:var(--txt2);padding:10px 0 4px}
-  .row{padding:9px 0;border-top:1px solid var(--line);font-size:15px}
-  .cell{text-align:center}
-  .ctr{display:flex;align-items:center;justify-content:center;gap:4px}
-  .ctr button{width:32px;height:32px;border-radius:8px;border:1px solid var(--line2);background:#fff;font-size:17px;color:var(--txt);cursor:pointer;touch-action:manipulation}
-  .ctr button:active{transform:scale(.95);background:var(--bg)}
-  .ctr b{min-width:24px;font-weight:600}
-  .falt{font-size:11px;margin-top:2px}
-  .falt.no{color:var(--rojo)} .falt.si{color:var(--ok)}
-  .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px;vertical-align:-1px}
+  .mt b{font-variant-numeric:tabular-nums}
+  .box{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:2px 14px}
+  .wish{padding:12px 0;border-top:1px solid var(--line)}
+  .wish:first-child{border-top:none}
+  .wish.done{opacity:.55}
+  .wn{font-size:16px;font-weight:600;margin-bottom:4px;overflow-wrap:anywhere}
+  .ln{display:grid;grid-template-columns:60px minmax(0,1fr) auto;gap:10px;align-items:center;padding:3px 0}
+  .lb{font-size:13px;color:var(--txt2);display:flex;align-items:center;gap:6px}
+  .bar{height:6px;border-radius:3px;background:#efe9df;overflow:hidden}
+  .bar i{display:block;height:100%;border-radius:3px;background:var(--amb);transition:width 200ms var(--ease-out)}
+  .bar i.full{background:var(--verde)}
+  .num{font-size:12px;margin-top:4px;color:var(--txt2);font-variant-numeric:tabular-nums}
+  .num b{font-weight:600}
+  .num .f{color:var(--warn)} .num .ok{color:var(--ok)} .num .na{color:var(--muted)}
+  .st{display:flex;align-items:center;gap:2px}
+  .st button{width:44px;height:44px;border-radius:12px;border:1px solid var(--line2);background:#fff;font-size:20px;line-height:1;color:var(--txt);cursor:pointer}
+  .st button:active{transform:scale(.94);background:var(--bg)}
+  .st span{min-width:28px;text-align:center;font-weight:600;font-size:17px;font-variant-numeric:tabular-nums}
+  .sep{font-size:12px;color:var(--muted);padding:14px 0 2px;border-top:1px solid var(--line)}
+  .dot{display:inline-block;width:10px;height:10px;border-radius:50%;flex-shrink:0}
+  .estado{margin-left:auto;font-size:12px;color:var(--txt2);display:flex;align-items:center;gap:6px;border:none;background:none;padding:6px 0;font-weight:400}
+  .estado i{width:7px;height:7px;border-radius:50%;background:var(--verde);display:inline-block}
+  .estado.saving i{background:var(--amb)} .estado.err{color:var(--rojo);text-decoration:underline;cursor:pointer} .estado.err i{background:var(--rojo)}
+  button{touch-action:manipulation;-webkit-user-select:none;user-select:none;font-family:inherit;transition:transform 120ms var(--ease-out)}
+  :focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+  ::selection{background:#f3dcb8}
   .chips{display:flex;gap:6px;overflow-x:auto;margin-bottom:12px;padding-bottom:2px}
   .chips button{flex:none;border:1px solid var(--line2);background:#fff;border-radius:999px;padding:7px 13px;font-size:13px;color:var(--txt);cursor:pointer}
   .chips button.on{background:var(--acc-bg);color:var(--acc);border-color:var(--acc)}
@@ -44,6 +59,7 @@
   .card.arm{opacity:.7}
   .ctop{display:flex;justify-content:space-between;align-items:center;gap:8px}
   .ctop b{font-weight:600}
+  .chips button:active,nav button:active{transform:scale(.97)}
   .sub{color:var(--txt2);font-size:13px;margin-bottom:6px}
   .pill{font-size:12px;padding:3px 9px;border-radius:999px;white-space:nowrap}
   .p-listo{background:var(--acc-bg);color:var(--acc)} .p-falta{background:var(--rojo-bg);color:var(--rojo)}
@@ -59,25 +75,21 @@
   nav button i{font-size:24px}
   nav button.on{color:var(--cafe);font-weight:600}
   .vacio{color:var(--txt2);font-size:14px;text-align:center;padding:24px 0}
-  #cargando{position:fixed;top:12px;right:14px;font-size:12px;color:var(--txt2);display:none}
   .toast{position:fixed;left:50%;bottom:80px;transform:translateX(-50%);background:var(--txt);color:#fff;padding:9px 14px;border-radius:10px;font-size:13px;display:none;z-index:9}
 </style>
 </head>
 <body>
-<header><i class="ti ti-flame"></i><h1 id="titulo">Velas</h1></header>
-<div id="cargando">Guardando…</div>
+<header><i class="ti ti-flame" aria-hidden="true"></i><h1 id="titulo">Velas</h1>
+  <button class="estado" id="estado" aria-live="polite"><i></i><span>Guardado</span></button></header>
 <div class="toast" id="toast"></div>
 
 <main>
   <section id="vVelas">
     <div class="metrics">
-      <div class="mt"><small>Faltan rojas</small><b id="mR" style="color:var(--rojo)">–</b></div>
-      <div class="mt"><small>Faltan verdes</small><b id="mV" style="color:var(--verde)">–</b></div>
+      <div class="mt"><small><span class="dot" style="background:var(--rojo);margin-right:4px"></span>Rojas por hacer</small><b id="mR">–</b></div>
+      <div class="mt"><small><span class="dot" style="background:var(--verde);margin-right:4px"></span>Verdes por hacer</small><b id="mV">–</b></div>
     </div>
-    <div class="box">
-      <div class="head"><span>Deseo</span><span class="cell"><span class="dot" style="background:var(--rojo)"></span>Roja</span><span class="cell"><span class="dot" style="background:var(--verde)"></span>Verde</span></div>
-      <div id="inv"><div class="vacio">Cargando…</div></div>
-    </div>
+    <div class="box" id="inv"><div class="vacio">Cargando…</div></div>
   </section>
 
   <section id="vPaq" style="display:none">
@@ -97,8 +109,8 @@
 </main>
 
 <nav>
-  <button id="nV" class="on" onclick="ir('V')"><i class="ti ti-candle"></i>Velas</button>
-  <button id="nP" onclick="ir('P')"><i class="ti ti-gift"></i>Paquetes</button>
+  <button id="nV" class="on" aria-current="page" onclick="ir('V')"><i class="ti ti-candle" aria-hidden="true"></i>Velas</button>
+  <button id="nP" onclick="ir('P')"><i class="ti ti-gift" aria-hidden="true"></i>Paquetes</button>
 </nav>
 
 <script>
@@ -129,10 +141,22 @@
 
   function cargar() {
     if (API_URL.startsWith('PEGA')) { document.getElementById('inv').innerHTML = '<div class="vacio">Falta poner la URL de Apps Script en API_URL.</div>'; return; }
-    api('getData').then(pintar).catch(error);
+    api('getData').then(recibir).catch(error);
   }
   function error(e) { ocupado(false); aviso('Algo falló: ' + (e && e.message ? e.message : e)); }
-  function ocupado(on) { document.getElementById('cargando').style.display = on ? 'block' : 'none'; }
+
+  // Estado de guardado arriba a la derecha: guardado / guardando / error (toca para reintentar)
+  let enVuelo = 0;
+  function ocupado(on) { enVuelo = Math.max(0, enVuelo + (on ? 1 : -1)); estado(); }
+  function estado(err) {
+    const el = document.getElementById('estado');
+    const guardando = enVuelo > 0 || Object.keys(pendientes).length > 0;
+    el.className = 'estado' + (err ? ' err' : guardando ? ' saving' : '');
+    el.querySelector('span').textContent = err ? 'No se guardó · Reintentar' : guardando ? 'Guardando…' : 'Guardado';
+  }
+  document.getElementById('estado').addEventListener('click', () => {
+    if (document.getElementById('estado').classList.contains('err')) enviarCambios();
+  });
   function aviso(t) { const el = document.getElementById('toast'); el.textContent = t; el.style.display = 'block'; clearTimeout(el._t); el._t = setTimeout(() => el.style.display = 'none', 2500); }
 
   function stockMap() { const m = {}; D.inventario.forEach(r => m[key(r.deseo, r.color)] = { deseo:r.deseo, color:r.color, n:r.hechas }); return m; }
@@ -149,8 +173,14 @@
       return tiene < x.n ? `${x.d} ${x.c.txt} ×${x.n - tiene}` : null; }).filter(Boolean);
   }
 
+  // Recibe datos del servidor y vuelve a aplicar encima los toques que todavía no se han enviado
+  function recibir(data) {
+    D = data;
+    Object.values(pendientes).forEach(p => aplicarLocal(p.deseo, p.color, p.delta));
+    pintar(D);
+  }
+
   function pintar(data) {
-    ocupado(false);
     D = data;
     const st = stockMap(), nec = necesarioMap();
 
@@ -160,21 +190,33 @@
     D.inventario.forEach(r => add(r.deseo));
     D.paquetes.forEach(p => COLS.forEach(c => p[c.k].forEach(add)));
 
+    // Pantalla Velas: cada deseo con su línea roja y verde (y rosada si se pidió), "hechas de necesarias"
+    const COLOR_UI = { Rojo:{ lbl:'Roja', dot:'var(--rojo)' }, Verde:{ lbl:'Verde', dot:'var(--verde)' }, Rosado:{ lbl:'Rosada', dot:'var(--rosa)' } };
     let fr = 0, fv = 0;
-    const celda = (d, color) => {
-      const k = key(d, color), n = st[k] ? st[k].n : 0, f = Math.max(0, (nec[k] || 0) - n);
+    const linea = (d, color) => {
+      const k = key(d, color), h = st[k] ? st[k].n : 0, n = nec[k] || 0, f = Math.max(0, n - h);
       if (color === 'Rojo') fr += f; if (color === 'Verde') fv += f;
-      return `<div class="cell"><div class="ctr"><button aria-label="Restar" onclick="cambiar('${esc(d)}','${color}',-1)">−</button><b>${n}</b><button aria-label="Sumar" onclick="cambiar('${esc(d)}','${color}',1)">+</button></div>
-              <div class="falt ${f ? 'no' : 'si'}">${f ? 'faltan ' + f : (nec[k] ? 'completo' : '—')}</div></div>`;
+      const pct = n ? Math.min(100, Math.round(h / n * 100)) : 0;
+      const txt = n ? (f ? `<span class="f">Faltan <b>${f}</b></span> de ${n}` : `<span class="ok">Listas las ${n}${h > n ? ` · +${h - n}` : ''}</span>`)
+                    : `<span class="na">Sin pedidos${h ? ` · +${h}` : ''}</span>`;
+      const nom = `${d} ${COLOR_UI[color].lbl.toLowerCase()}`;
+      return { f, html: `<div class="ln">
+        <div class="lb"><span class="dot" style="background:${COLOR_UI[color].dot}"></span>${COLOR_UI[color].lbl}</div>
+        <div><div class="bar"><i class="${n && !f ? 'full' : ''}" style="width:${pct}%"></i></div><div class="num">${txt}</div></div>
+        <div class="st"><button aria-label="Restar ${esc(nom)}" data-d="${esc(d)}" data-c="${color}" data-x="-1">−</button><span>${h}</span><button aria-label="Sumar ${esc(nom)}" data-d="${esc(d)}" data-c="${color}" data-x="1">+</button></div>
+      </div>` };
     };
-    let html = orden.map(d => `<div class="row"><span>${esc(d)}</span>${celda(d,'Rojo')}${celda(d,'Verde')}</div>`).join('');
-    // Rosadas: solo los deseos que tengan rosadas pedidas o en inventario
-    const rosas = orden.filter(d => nec[key(d,'Rosado')] || st[key(d,'Rosado')]);
-    html += rosas.map(d => { const k = key(d,'Rosado'), n = st[k] ? st[k].n : 0, f = Math.max(0,(nec[k]||0)-n);
-      return `<div class="row"><span>${esc(d)} <span style="font-size:12px;color:var(--rosa)">rosada</span></span>
-        <div class="cell"><div class="ctr"><button aria-label="Restar" onclick="cambiar('${esc(d)}','Rosado',-1)">−</button><b>${n}</b><button aria-label="Sumar" onclick="cambiar('${esc(d)}','Rosado',1)">+</button></div>
-        <div class="falt ${f?'no':'si'}">${f ? 'falta ' + f : 'completo'}</div></div><span></span></div>`; }).join('');
-    document.getElementById('inv').innerHTML = html || '<div class="vacio">No hay deseos todavía.</div>';
+    const bloques = orden.map(d => {
+      const cols = ['Rojo', 'Verde'];
+      if (nec[key(d,'Rosado')] || st[key(d,'Rosado')]) cols.push('Rosado');
+      const ls = cols.map(c => linea(d, c));
+      const falta = ls.reduce((s, l) => s + l.f, 0);
+      return { falta, html: `<div class="wish ${falta ? '' : 'done'}"><div class="wn">${esc(d)}</div>${ls.map(l => l.html).join('')}</div>` };
+    });
+    const pendientesD = bloques.filter(b => b.falta), completos = bloques.filter(b => !b.falta);
+    document.getElementById('inv').innerHTML =
+      (pendientesD.map(b => b.html).join('') + (completos.length ? `<div class="sep">Completos</div>` + completos.map(b => b.html).join('') : ''))
+      || '<div class="vacio">No hay deseos todavía.</div>';
     document.getElementById('mR').textContent = fr;
     document.getElementById('mV').textContent = fv;
 
@@ -220,24 +262,65 @@
     return `<div class="card ${arm ? 'arm' : ''}"><div class="ctop">${titulo}${pill}</div>${sub}${lineas}${cuenta}${falta}${btn}</div>`;
   }
 
-  function cambiar(deseo, color, delta) {
-    // Cambio inmediato en pantalla, luego se guarda
+  // ---- Inventario: los toques se juntan y se mandan en un solo envío ----
+  let pendientes = {};      // clave → {deseo, color, delta} aún sin enviar
+  let timerEnvio = null;
+  let enviando = false;
+
+  function aplicarLocal(deseo, color, delta) {
     const k = key(deseo, color);
     const r = D.inventario.find(x => key(x.deseo, x.color) === k);
     if (r) r.hechas = Math.max(0, r.hechas + delta); else D.inventario.push({ deseo, color, hechas: Math.max(0, delta) });
-    pintar(D); ocupado(true);
-    api('cambiarStock', { deseo, color, delta }).then(pintar).catch(e => { error(e); cargar(); });
   }
 
-  function armar(id, conFaltantes) {
-    if (conFaltantes && !confirm('A este paquete le faltan velas en el inventario. ¿Marcarlo como armado igual?')) return;
-    ocupado(true);
-    api('armar', { id }).then(d => { pintar(d); aviso('Paquete armado'); }).catch(error);
+  function cambiar(deseo, color, delta) {
+    const k = key(deseo, color);
+    const r = D.inventario.find(x => key(x.deseo, x.color) === k);
+    if (delta < 0 && (!r || r.hechas <= 0)) return;            // no baja de 0
+    aplicarLocal(deseo, color, delta);
+    pendientes[k] = pendientes[k] || { deseo, color, delta: 0 };
+    pendientes[k].delta += delta;
+    if (pendientes[k].delta === 0) delete pendientes[k];
+    pintar(D); estado();
+    clearTimeout(timerEnvio);
+    timerEnvio = setTimeout(enviarCambios, 600);
   }
-  function desarmar(id) {
-    if (!confirm('¿Deshacer el armado? Las velas vuelven al inventario.')) return;
+
+  async function enviarCambios() {
+    clearTimeout(timerEnvio);
+    if (enviando) { timerEnvio = setTimeout(enviarCambios, 300); return; }
+    const items = Object.values(pendientes);
+    if (!items.length) { estado(); return; }
+    pendientes = {};
+    enviando = true; ocupado(true);
+    try {
+      const d = await api('cambiarVarios', { items });
+      enviando = false; ocupado(false);
+      recibir(d);
+    } catch (e) {
+      // Se devuelven a la cola para reintentar sin perder ningún toque
+      items.forEach(it => { const k = key(it.deseo, it.color);
+        pendientes[k] = pendientes[k] || { deseo: it.deseo, color: it.color, delta: 0 }; pendientes[k].delta += it.delta; });
+      enviando = false; ocupado(false); estado(true);
+    }
+  }
+
+  document.getElementById('inv').addEventListener('click', e => {
+    const b = e.target.closest('button[data-c]'); if (!b) return;
+    cambiar(b.dataset.d, b.dataset.c, Number(b.dataset.x));
+  });
+
+  async function armar(id, conFaltantes) {
+    if (conFaltantes && !confirm('A este paquete le faltan velas en el inventario. ¿Marcarlo como armado igual?')) return;
+    await enviarCambios();
     ocupado(true);
-    api('desarmar', { id }).then(d => { pintar(d); aviso('Armado deshecho'); }).catch(error);
+    api('armar', { id }).then(d => { ocupado(false); recibir(d); aviso('Paquete armado'); }).catch(error);
+  }
+  async function desarmar(id) {
+    if (!confirm('¿Deshacer el armado? Las velas vuelven al inventario.')) return;
+    await enviarCambios();
+    ocupado(true);
+    api('desarmar', { id }).then(d => { ocupado(false); recibir(d); aviso('Armado deshecho'); }).catch(error);
   }
 
   function ir(v) {
@@ -245,6 +328,8 @@
     document.getElementById('vPaq').style.display = v === 'P' ? 'block' : 'none';
     document.getElementById('nV').classList.toggle('on', v === 'V');
     document.getElementById('nP').classList.toggle('on', v === 'P');
+    ['nV','nP'].forEach(id => { const on = (id === 'nV') === (v === 'V');
+      if (on) document.getElementById(id).setAttribute('aria-current', 'page'); else document.getElementById(id).removeAttribute('aria-current'); });
     document.getElementById('titulo').textContent = v === 'V' ? 'Velas' : 'Paquetes';
     window.scrollTo(0, 0);
   }
@@ -256,7 +341,9 @@
   });
 
   // Si la otra persona cambió algo, al volver a la app se actualiza
-  document.addEventListener('visibilitychange', () => { if (!document.hidden) cargar(); });
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && !enviando && !Object.keys(pendientes).length) cargar();
+  });
 
   cargar();
 </script>
