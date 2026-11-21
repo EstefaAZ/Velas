@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Velas de deseos</title>
-<meta name="app-version" content="2026-11-21-botones">
+<meta name="app-version" content="2026-11-21-texto-previstas">
 <meta name="theme-color" content="#f6f3ee">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3/dist/tabler-icons.min.css">
 <style>
@@ -528,7 +528,7 @@
     // Recordatorio de previstas en la pestaña Sin deseos
     const totPrev = (D.previstas || []).reduce((a, r) => a + r.cantidad, 0);
     if (pestana === 's' && totPrev && !busqueda)
-      html = `<div class="nota-prev"><i class="ti ti-info-circle" aria-hidden="true"></i><span>Hay <b>${totPrev} velas previstas</b> para estas personas. Cuando lleguen sus deseos, escríbelos en la hoja Paquetes y baja esas cantidades en la pestaña <b>Previstas</b>, para no contarlas dos veces.</span></div>` + html;
+      html = `<div class="nota-prev"><i class="ti ti-info-circle" aria-hidden="true"></i><span>Hay <b>${totPrev} velas previstas</b> para estas personas. Cuando te digan sus deseos, toca su nombre y elígelos aquí: la app reparte los colores y descuenta las previstas sola.</span></div>` + html;
     document.getElementById('paq').innerHTML = html || `<div class="vacio">${busqueda ? 'Nadie con ese nombre.' :
       pestana === 'p' ? 'No hay paquetes por armar.' : pestana === 's' ? 'Todos ya eligieron sus deseos.' : 'Todavía no hay paquetes armados.'}</div>`;
   }
