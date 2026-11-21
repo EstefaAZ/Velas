@@ -46,6 +46,7 @@
   .st span{min-width:28px;text-align:center;font-weight:600;font-size:17px;font-variant-numeric:tabular-nums}
   .sep{font-size:12px;color:var(--muted);padding:14px 0 2px;border-top:1px solid var(--line)}
   .dot{display:inline-block;width:10px;height:10px;border-radius:50%;flex-shrink:0}
+  .estado:disabled{opacity:1;cursor:default}
   .estado{margin-left:auto;font-size:12px;color:var(--txt2);display:flex;align-items:center;gap:6px;border:none;background:none;padding:6px 0;font-weight:400}
   .estado i{width:7px;height:7px;border-radius:50%;background:var(--verde);display:inline-block}
   .estado.saving i{background:var(--amb)} .estado.err{color:var(--rojo);text-decoration:underline;cursor:pointer} .estado.err i{background:var(--rojo)}
@@ -143,7 +144,7 @@
 </head>
 <body>
 <header><i class="ti ti-flame" aria-hidden="true"></i><h1 id="titulo">Velas</h1>
-  <button class="estado" id="estado" aria-live="polite"><i></i><span>Guardado</span></button></header>
+  <button class="estado saving" id="estado" aria-live="polite" disabled><i></i><span>Cargando…</span></button></header>
 <div class="toast" id="toast" role="status"><span></span><button type="button"></button></div>
 
 <main>
@@ -224,10 +225,28 @@
   let busqueda = '', confirmId = null, fijos = {};
   const esc = s => String(s).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 
+  let cargado = false, falloInicial = false;
   function cargar() {
     if (API_URL.startsWith('PEGA')) { document.getElementById('inv').innerHTML = '<div class="vacio">Falta poner la URL de Apps Script en API_URL.</div>'; return; }
-    api('getData').then(recibir).catch(error);
+    api('getData').then(d => { cargado = true; falloInicial = false; recibir(d); estado(); }).catch(e => {
+      if (e && e.message === 'Falta la clave') return;
+      if (!cargado) falloCarga(); else error(e);
+    });
   }
+  // Si la primera carga falla, se muestra en pantalla con un botón para reintentar
+  function falloCarga() {
+    falloInicial = true;
+    const msg = `<div class="vacio">No se pudo cargar la información.<br>Revisa la conexión e intenta de nuevo.
+      <button class="btn main" data-reintentar style="max-width:220px;margin:14px auto 0;display:block">Reintentar</button></div>`;
+    document.getElementById('inv').innerHTML = msg;
+    document.getElementById('paq').innerHTML = msg;
+    estado();
+  }
+  document.addEventListener('click', e => {
+    if (!e.target.closest('[data-reintentar]')) return;
+    document.getElementById('inv').innerHTML = document.getElementById('paq').innerHTML = '<div class="vacio">Cargando…</div>';
+    falloInicial = false; estado(); cargar();
+  });
   function error(e) { ocupado(false); const m = e && e.message ? e.message : String(e); if (m !== 'Falta la clave') aviso('Algo falló: ' + m); }
 
   // Estado de guardado arriba a la derecha: guardado / guardando / error (toca para reintentar)
@@ -236,8 +255,10 @@
   function estado(err) {
     const el = document.getElementById('estado');
     const guardando = enVuelo > 0 || Object.keys(pendientes).length > 0;
-    el.className = 'estado' + (err ? ' err' : guardando ? ' saving' : '');
-    el.querySelector('span').textContent = err ? 'No se guardó · Reintentar' : guardando ? 'Guardando…' : 'Guardado';
+    const sinDatos = !cargado;
+    el.className = 'estado' + (err ? ' err' : (guardando || sinDatos) ? ' saving' : '');
+    el.querySelector('span').textContent = err ? 'No se guardó · Reintentar' : guardando ? 'Guardando…' : sinDatos ? (falloInicial ? 'Sin conexión' : 'Cargando…') : 'Guardado';
+    el.disabled = !err;
   }
   document.getElementById('estado').addEventListener('click', () => {
     if (document.getElementById('estado').classList.contains('err')) enviarCambios();
@@ -259,12 +280,7 @@
       COLS.forEach(c => p[c.k].forEach(d => { const k = key(d, c.color); m[k] = (m[k] || 0) + 1; })));
     return m;
   }
-  function faltantes(p, st) {
-    const pide = {};
-    COLS.forEach(c => p[c.k].forEach(d => { const k = key(d, c.color); pide[k] = pide[k] || { d, c, n:0 }; pide[k].n++; }));
-    return Object.keys(pide).map(k => { const tiene = st[k] ? st[k].n : 0; const x = pide[k];
-      return tiene < x.n ? `${x.d} ${x.c.txt} ×${x.n - tiene}` : null; }).filter(Boolean);
-  }
+
 
   // Recibe datos del servidor y vuelve a aplicar encima los toques que todavía no se han enviado
   function recibir(data) {
@@ -276,6 +292,7 @@
   function pintar(data) {
     D = data;
     const st = stockMap(), nec = necesarioMap(), prev = previstasMap();
+    asignar(st);
 
     // Lista de deseos: los de la pestaña Deseos + cualquiera que aparezca en paquetes o inventario
     const orden = [...D.deseos];
@@ -321,7 +338,7 @@
     const lista = D.paquetes.filter(p => (!busqueda || norm(p.persona).includes(busqueda)) && enTab(p) === pestana);
     let html = '';
     if (pestana === 'p') {
-      const grupo = p => p.id in fijos ? fijos[p.id].r : (faltantes(p, st).length ? 1 : 0);
+      const grupo = p => p.id in fijos ? fijos[p.id].r : (faltan(p) ? 1 : 0);
       const L = lista.filter(p => grupo(p) === 0), F = lista.filter(p => grupo(p) === 1);
       if (L.length) html += `<div class="lbl">Listos · ${L.length}</div><div class="lista">${L.map(p => fila(p, st)).join('')}</div>`;
       if (F.length) html += `<div class="lbl">Les faltan velas · ${F.length}</div><div class="lista">${F.map(p => fila(p, st)).join('')}</div>`;
@@ -333,12 +350,35 @@
   function soltarFijos() { fijos = {}; confirmId = null; }
 
   // Qué velas del paquete tiene el inventario: marca una por una las que faltan
-  function velasDe(p, st) {
-    const usadas = {};
-    return COLS.flatMap(c => p[c.k].map(d => {
-      const k = key(d, c.color); usadas[k] = (usadas[k] || 0) + 1;
-      return { d, c, falta: p.estado !== 'Armado' && usadas[k] > (st[k] ? st[k].n : 0) };
-    }));
+  // Reparte el inventario entre los paquetes pendientes para que dos paquetes no "usen" la misma vela.
+  // 1) En el orden de la hoja, a cada paquete que se puede completar con lo que queda se le apartan sus velas (Listo).
+  // 2) A los demás se les reparte lo que sobra, en el mismo orden, y se marca lo que les falta.
+  let asignacion = {};
+  function asignar(st) {
+    const disp = {}; Object.keys(st).forEach(k => disp[k] = st[k].n);
+    const res = {}, pend = D.paquetes.filter(p => p.estado === 'Pendiente');
+    const pide = p => { const m = {}; COLS.forEach(c => p[c.k].forEach(d => { const k = key(d, c.color); m[k] = (m[k] || 0) + 1; })); return m; };
+    const resto = [];
+    pend.forEach(p => {
+      const m = pide(p);
+      if (Object.keys(m).every(k => (disp[k] || 0) >= m[k])) {
+        Object.keys(m).forEach(k => disp[k] -= m[k]);
+        res[p.id] = COLS.flatMap(c => p[c.k].map(d => ({ d, c, falta: false, apartada: false })));
+      } else resto.push(p);
+    });
+    resto.forEach(p => {
+      res[p.id] = COLS.flatMap(c => p[c.k].map(d => {
+        const k = key(d, c.color);
+        if ((disp[k] || 0) > 0) { disp[k]--; return { d, c, falta: false, apartada: false }; }
+        return { d, c, falta: true, apartada: (st[k] ? st[k].n : 0) > 0 };   // hay en inventario pero ya está apartada
+      }));
+    });
+    asignacion = res;
+  }
+  function faltan(p) { return (asignacion[p.id] || []).filter(v => v.falta).length; }
+  function velasDe(p) {
+    if (p.estado === 'Pendiente' && asignacion[p.id]) return asignacion[p.id];
+    return COLS.flatMap(c => p[c.k].map(d => ({ d, c, falta: false, apartada: false })));
   }
   const COLOR_VELA = { Rojo:'var(--rojo)', Verde:'var(--verde)', Rosado:'var(--rosa)' };
 
@@ -346,7 +386,7 @@
     const varios = !/^1 de 1$/.test(String(p.numero).trim());
     const sub = [varios ? 'Paquete ' + esc(p.numero) : '', esc(p.color)].filter(Boolean).join(' · ');
     const esp = p.estado === 'Esperando deseos', arm = p.estado === 'Armado';
-    const vs = esp ? [] : velasDe(p, st), nf = vs.filter(v => v.falta).length;
+    const vs = esp ? [] : velasDe(p), nf = vs.filter(v => v.falta).length;
     const velitas = esp
       ? Array.from({ length: p.tamano || 0 }, () => '<span class="g"></span>').join('')
       : vs.map(v => `<span class="${v.falta ? 'm' : ''}" style="background:${COLOR_VELA[v.c.color]}"></span>`).join('');
@@ -363,6 +403,8 @@
     const columna = (c, t) => { const l = vs.filter(v => v.c === c); return l.length ? `<div class="col"><h4><span class="dot" style="background:${COLOR_VELA[c.color]}"></span>${t}</h4><ul>${l.map(v => `<li class="${v.falta ? 'm' : ''}">${esc(v.d)}</li>`).join('')}</ul></div>` : ''; };
     const cols = [columna(COLS[0], 'Rojas'), columna(COLS[1], 'Verdes'), columna(COLS[2], 'Rosada')].filter(Boolean);
     const total = vs.length;
+    const nAp = vs.filter(v => v.apartada).length;
+    const apartadas = nAp ? `<div class="aviso">${nAp === 1 ? 'Una vela que falta sí está' : nAp + ' velas que faltan sí están'} en el inventario, pero apartada${nAp === 1 ? '' : 's'} para otros paquetes de la lista.</div>` : '';
     const cuenta = total !== p.tamano ? `<div class="aviso">Tiene ${total} deseos y el paquete es de ${p.tamano}. Revisa la hoja.</div>` : '';
     const conocidos = new Set(D.deseos.map(norm));
     const raros = D.deseos.length ? [...new Set(vs.map(v => v.d).filter(d => !conocidos.has(norm(d))))] : [];
@@ -373,7 +415,7 @@
         <div class="acc"><button class="btn" data-acc="cancelar">Cancelar</button><button class="btn main" data-acc="armarYa" data-id="${esc(p.id)}">Sí, armar</button></div></div>`;
     else if (nf) acc = `<button class="btn" data-acc="armar" data-id="${esc(p.id)}" data-falta="1">Armar igual</button>`;
     else acc = `<button class="btn main" data-acc="armar" data-id="${esc(p.id)}" data-falta="0"><i class="ti ti-check" aria-hidden="true"></i> Marcar como armado</button>`;
-    return `<div class="rw open">${cab}<div class="det"><div class="cols" style="grid-template-columns:repeat(${cols.length},minmax(0,1fr))">${cols.join('')}</div>${cuenta}${revisar}${acc}</div></div>`;
+    return `<div class="rw open">${cab}<div class="det"><div class="cols" style="grid-template-columns:repeat(${cols.length},minmax(0,1fr))">${cols.join('')}</div>${cuenta}${revisar}${apartadas}${acc}</div></div>`;
   }
 
   // ---- Inventario: los toques se juntan y se mandan en un solo envío ----
@@ -427,7 +469,7 @@
   function nombre(id) { const p = D.paquetes.find(x => x.id === id); return p ? p.persona : 'Paquete'; }
   // La fila que acabas de armar o deshacer se queda en su pestaña y grupo hasta que cambies de pestaña o busques
   function fijar(id) { const p = D.paquetes.find(x => x.id === id); if (!p || id in fijos) return;
-    fijos[id] = { tab: pestana, r: faltantes(p, stockMap()).length ? 1 : 0 }; }
+    fijos[id] = { tab: pestana, r: faltan(p) ? 1 : 0 }; }
 
   async function armar(id) {
     confirmId = null; fijar(id);
