@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Velas de deseos</title>
-<meta name="app-version" content="2026-11-21-fueguitos">
+<meta name="app-version" content="2026-11-21-editar-pagado">
 <meta name="theme-color" content="#f6f3ee">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3/dist/tabler-icons.min.css">
 <style>
@@ -291,6 +291,12 @@
   .f-op input:disabled + .fl .o{stroke:#e2d9cc}
   .f-op input:focus-visible + .fl{outline:2px solid var(--acc);outline-offset:2px}
   @media (prefers-reduced-motion: reduce){ .f-op .fl svg{transition:none} .f-op input:checked + .fl svg{transform:none} }
+  .det .btn-pagar{width:auto;min-height:40px;margin:0;padding:0 16px;font-size:14px;border:1.5px solid #9cc98f;background:#f2f8ee;color:var(--ok)}
+  @media (hover:hover) and (pointer:fine){ .det .btn-pagar:hover{background:#e6f2df} }
+  .acc-fila{justify-content:flex-end;align-items:center;margin-top:2px}
+  .acc-fila .btn-armar{margin:0}
+  .stt .f{color:var(--warn)}
+  .n-exceso{margin-top:10px}
 </style>
 </head>
 <body>
@@ -558,16 +564,17 @@
       if (F.length) html += `<div class="lbl">Les faltan velas · ${F.length}</div><div class="lista">${F.map(p => fila(p, st)).join('')}</div>`;
     } else if (pestana === 'a') {
       // Armados: primero los que faltan por entregar, luego los entregados
-      const grupoA = p => p.id in fijos ? fijos[p.id].r : (p.estado === 'Entregado' ? 1 : 0);
-      const PE = lista.filter(p => grupoA(p) === 0), EN = lista.filter(p => grupoA(p) === 1);
-      if (PE.length) html += `<div class="lbl">Por entregar · ${PE.length}</div><div class="lista">${PE.map(p => fila(p, st)).join('')}</div>`;
-      if (EN.length) html += `<div class="lbl">Entregados · ${EN.length}</div><div class="lista">${EN.map(p => fila(p, st)).join('')}</div>`;
+      const grupoA = p => p.id in fijos ? fijos[p.id].r : grupoArmado(p);
+      [['Por entregar', 0], ['Entregados sin pagar', 1], ['Pagados', 2]].forEach(([t, g]) => {
+        const L = lista.filter(p => grupoA(p) === g);
+        if (L.length) html += `<div class="lbl">${t} · ${L.length}</div><div class="lista">${L.map(p => fila(p, st)).join('')}</div>`;
+      });
     } else if (lista.length) html = `<div class="lista">${lista.map(p => fila(p, st)).join('')}</div>`;
     // Recordatorio de previstas en la pestaña Sin deseos
     const totPrev = (D.previstas || []).reduce((a, r) => a + r.cantidad, 0);
     if (pestana === 's' && totPrev && !busqueda)
       html = `<div class="nota-prev"><i class="ti ti-info-circle" aria-hidden="true"></i><div><p>Estas personas aún no eligen deseos, pero ya contamos <b>${totPrev} velas previstas</b> para ellas. Cuando te digan sus deseos:</p>
-        <ol><li>Toca su nombre.</li><li>Elige el color del paquete, si aún no lo tiene.</li><li>Marca sus deseos y toca <b>Guardar deseos</b>.</li></ol>
+        <ol><li>Toca su nombre.</li><li>Ajusta el tamaño o el color del paquete, si hace falta.</li><li>Marca sus deseos y toca <b>Guardar deseos</b>.</li></ol>
         <p>Y listo. La app se encarga del resto.</p></div></div>` + html;
     document.getElementById('paq').innerHTML = html || `<div class="vacio">${busqueda ? 'Nadie con ese nombre.' :
       pestana === 'p' ? 'No hay paquetes por armar.' : pestana === 's' ? 'Todos ya eligieron sus deseos.' : 'Todavía no hay paquetes armados.'}</div>`;
@@ -616,7 +623,7 @@
     const velitas = esp
       ? Array.from({ length: p.tamano || 0 }, () => '<span class="g"></span>').join('')
       : vs.map(v => `<span class="${v.falta ? 'm' : ''}" style="background:${COLOR_VELA[v.c.color]}"></span>`).join('');
-    const estadoTxt = ent ? '<span class="ent"><i class="ti ti-gift" aria-hidden="true"></i>Entregado</span>'
+    const estadoTxt = ent ? (p.fechaPago ? '<span class="ok"><i class="ti ti-cash" aria-hidden="true"></i>Pagado</span>' : '<span class="f">● Sin pagar</span>')
       : arm ? '<span class="ok"><i class="ti ti-check" aria-hidden="true"></i>Armado</span>'
       : esp ? `<span class="g">Escribir deseos</span>`
       : nf ? `<span class="f">Faltan ${nf}</span>` : '<span class="ok"><i class="ti ti-circle-check" aria-hidden="true"></i>Listo</span>';
@@ -641,12 +648,18 @@
     const COLTXT = { rojo:'roja', verde:'verde', rosado:'rosada' };
     const sinInv = (p.sinInventario || []).map(x => `${esc(x.deseo)} ${COLTXT[norm(x.color)] || esc(x.color)}`);
     const avisoSinInv = arm && sinInv.length ? `<div class="aviso">Se armó sin que estas velas estuvieran en el inventario: ${sinInv.join(', ')}.</div>` : '';
-    if (ent) acc = avisoSinInv + `<div class="armado-el"><span>Armado el ${esc(p.fecha)} · entregado el ${esc(p.fechaEntrega || '')}</span><button class="btn link" data-acc="desentregar" data-id="${esc(p.id)}">Deshacer entrega</button></div>`;
+    const pag = ent && !!p.fechaPago;
+    if (pag) acc = avisoSinInv + `<div class="armado-el"><span>Entregado el ${esc(p.fechaEntrega || '')} · pagado el ${esc(p.fechaPago)}</span><button class="btn link" data-acc="despagar" data-id="${esc(p.id)}">Deshacer pago</button></div>`;
+    else if (ent) acc = avisoSinInv + `<div class="armado-el"><span>Armado el ${esc(p.fecha)} · entregado el ${esc(p.fechaEntrega || '')}</span><div class="acc-r"><button class="btn link" data-acc="desentregar" data-id="${esc(p.id)}">Deshacer entrega</button><button class="btn btn-pagar" data-acc="pagar" data-id="${esc(p.id)}">$ Pagado</button></div></div>`;
     else if (arm) acc = avisoSinInv + `<div class="armado-el"><span>Armado el ${esc(p.fecha)}</span><div class="acc-r"><button class="btn link" data-acc="desarmar" data-id="${esc(p.id)}">Deshacer</button><button class="btn btn-armar" data-acc="entregar" data-id="${esc(p.id)}">Entregado</button></div></div>`;
     else if (confirmId === p.id) acc = `<div class="confirma">Le faltan ${nf} velas en el inventario. ¿Lo marcas como armado igual?
         <div class="acc"><button class="btn" data-acc="cancelar">Cancelar</button><button class="btn main" data-acc="armarYa" data-id="${esc(p.id)}">Sí, armar</button></div></div>`;
-    else if (nf) acc = `<button class="btn btn-armar igual" data-acc="armar" data-id="${esc(p.id)}" data-falta="1">Armar igual</button>`;
-    else acc = `<button class="btn btn-armar" data-acc="armar" data-id="${esc(p.id)}" data-falta="0">Marcar como armado</button>`;
+    else {
+      const editar = `<button class="btn link" data-acc="editar" data-id="${esc(p.id)}"><i class="ti ti-pencil" aria-hidden="true"></i> Editar</button>`;
+      const armarB = nf ? `<button class="btn btn-armar igual" data-acc="armar" data-id="${esc(p.id)}" data-falta="1">Armar igual</button>`
+                        : `<button class="btn btn-armar" data-acc="armar" data-id="${esc(p.id)}" data-falta="0">Marcar como armado</button>`;
+      acc = `<div class="acc-r acc-fila">${editar}${armarB}</div>`;
+    }
     return `<div class="rw open">${cab}<div class="det"><div class="cols" style="grid-template-columns:repeat(${cols.length},minmax(0,1fr))">${cols.join('')}</div>${cuenta}${revisar}${apartadas}${acc}</div></div>`;
   }
 
@@ -661,30 +674,38 @@
   // Mitad y mitad en mixtos; prefiere el color que ya hay hecho (sobrante del inventario) y,
   // si la persona tiene otro paquete, pone cada deseo repetido en el color contrario.
   function decidirColores(ctx) {
-    const sel = ctx.sel, n = sel.length;
-    if (ctx.color === 'Rojo') return sel.map(() => 'R');
-    if (ctx.color === 'Verde') return sel.map(() => 'V');
-    const hermanos = {};
-    D.paquetes.filter(q => q.id !== ctx.excluir && norm(q.persona) === norm(ctx.persona || '')).forEach(q => {
-      q.rojas.forEach(d => hermanos[norm(d)] = 'R'); q.verdes.forEach(d => hermanos[norm(d)] = 'V');
-    });
-    let mejor = 0, mejorPts = -1e9;
-    const tamR = [Math.floor(n / 2), Math.ceil(n / 2)];
-    for (let mask = 0; mask < (1 << n); mask++) {
-      let nr = 0; for (let i = 0; i < n; i++) if (mask & (1 << i)) nr++;
-      if (!tamR.includes(nr)) continue;
-      let pts = 0; const usa = {};
-      for (let i = 0; i < n; i++) {
-        const c = (mask & (1 << i)) ? 'R' : 'V', k = key(sel[i], c === 'R' ? 'Rojo' : 'Verde');
-        usa[k] = (usa[k] || 0) + 1;
-        if ((sobrante[k] || 0) >= usa[k]) pts += 3;
-        const h = hermanos[norm(sel[i])]; if (h) pts += h !== c ? 5 : -5;
-        pts -= i * 0.001 * (c === 'R' ? 1 : -1);
+    const sel = ctx.sel, rosa = ctx.rosa || new Set();
+    // Si se está editando y no cambió tamaño, color ni deseos, se conservan los colores que ya tenía
+    if (ctx.orig && ctx.N === ctx.orig.N && ctx.color === ctx.orig.color && !Object.values(ctx.swap).some(Boolean) &&
+        sel.length === ctx.orig.sel.length && sel.every(w => ctx.orig.sel.includes(w)))
+      return sel.map(w => ctx.orig.mapa[w]);
+    const fijos = sel.map(w => rosa.has(norm(w)) ? 'P' : null);   // rosadas se quedan rosadas
+    const idx = sel.map((_, i) => i).filter(i => !fijos[i]), n = idx.length;
+    let res = fijos.slice();
+    if (ctx.color === 'Rojo' || ctx.color === 'Verde') { idx.forEach(i => res[i] = ctx.color === 'Rojo' ? 'R' : 'V'); }
+    else {
+      const hermanos = {};
+      D.paquetes.filter(q => q.id !== ctx.excluir && norm(q.persona) === norm(ctx.persona || '')).forEach(q => {
+        q.rojas.forEach(d => hermanos[norm(d)] = 'R'); q.verdes.forEach(d => hermanos[norm(d)] = 'V');
+      });
+      let mejor = 0, mejorPts = -1e9;
+      const tamR = [Math.floor(n / 2), Math.ceil(n / 2)];
+      for (let mask = 0; mask < (1 << n); mask++) {
+        let nr = 0; for (let j = 0; j < n; j++) if (mask & (1 << j)) nr++;
+        if (!tamR.includes(nr)) continue;
+        let pts = 0; const usa = {};
+        for (let j = 0; j < n; j++) {
+          const w = sel[idx[j]], c = (mask & (1 << j)) ? 'R' : 'V', k = key(w, c === 'R' ? 'Rojo' : 'Verde');
+          usa[k] = (usa[k] || 0) + 1;
+          if ((sobrante[k] || 0) >= usa[k]) pts += 3;
+          const h = hermanos[norm(w)]; if (h) pts += h !== c ? 5 : -5;
+          pts -= j * 0.001 * (c === 'R' ? 1 : -1);
+        }
+        if (pts > mejorPts) { mejorPts = pts; mejor = mask; }
       }
-      if (pts > mejorPts) { mejorPts = pts; mejor = mask; }
+      idx.forEach((i, j) => res[i] = (mejor & (1 << j)) ? 'R' : 'V');
     }
-    const res = sel.map((_, i) => (mejor & (1 << i)) ? 'R' : 'V');
-    Object.keys(ctx.swap).forEach(i => { if (ctx.swap[i] && res[i]) res[i] = res[i] === 'R' ? 'V' : 'R'; });
+    Object.keys(ctx.swap).forEach(i => { if (ctx.swap[i] && (res[i] === 'R' || res[i] === 'V')) res[i] = res[i] === 'R' ? 'V' : 'R'; });
     return res;
   }
 
@@ -703,11 +724,12 @@
         return `<label class="f-op ${off ? 'off' : ''}"><input type="checkbox" data-fw="${esc(w)}" ${on ? 'checked' : ''} ${off ? 'disabled' : ''}>${FLAMA}${esc(w)}</label>`; }).join('')}
         <div class="f-cnt"><span><b>${sel.length} de ${N}</b> elegidos</span><button type="button" data-acc="fdd">Listo</button></div></div>`;
     h += `</div>`;
+    if (sel.length > N) h += `<div class="aviso n-exceso">El paquete ahora es de ${N} velas y tiene ${sel.length} deseos. Desmarca ${sel.length - N} para continuar.</div>`;
     if (sel.length === N) {
       const c = decidirColores(ctx), L = k => sel.map((w, i) => [w, i]).filter(x => c[x[1]] === k);
       const ul = k => `<ul>${L(k).map(([w, i]) => `<li>${ctx.color === 'Mixto' ? `<button type="button" data-acc="fswap" data-i="${i}">${esc(w)}</button>` : esc(w)}</li>`).join('') || '<li class="f-vac">—</li>'}</ul>`;
       const tieneOtro = D.paquetes.some(q => q.id !== ctx.excluir && norm(q.persona) === norm(ctx.persona || ''));
-      h += `<div class="f-lbl">${(ctx.cant || 1) > 1 ? 'Así quedan los colores del paquete 1' : 'Así quedan los colores'}</div><div class="f-prev"><div><h4><span class="dot" style="background:var(--rojo)"></span>Rojas</h4>${ul('R')}</div><div><h4><span class="dot" style="background:var(--verde)"></span>Verdes</h4>${ul('V')}</div></div>
+      h += `<div class="f-lbl">${(ctx.cant || 1) > 1 ? 'Así quedan los colores del paquete 1' : 'Así quedan los colores'}</div><div class="f-prev"><div><h4><span class="dot" style="background:var(--rojo)"></span>Rojas</h4>${ul('R')}</div><div><h4><span class="dot" style="background:var(--verde)"></span>Verdes</h4>${ul('V')}</div>${L('P').length ? `<div><h4><span class="dot" style="background:var(--rosa)"></span>Rosada</h4><ul>${L('P').map(([w]) => `<li>${esc(w)}</li>`).join('')}</ul></div>` : ''}</div>
         <div class="f-why">${ctx.color === 'Mixto' ? 'Mitad y mitad, priorizando el color que ya tienes hecho' + (tieneOtro ? ' y poniendo en color contrario lo que se repite en su otro paquete' : '') + '. Toca un deseo para cambiarle el color.' : 'Todas las velas van en ' + (ctx.color === 'Rojo' ? 'rojo' : 'verde') + '.'}</div>`;
     }
     return h;
@@ -716,9 +738,10 @@
   function formulario(p) {
     if (!forms.sin || forms.sin.id !== p.id) abrirFormSin(p);
     const ctx = forms.sin, N = ctx.N;
-    return `<div data-form="sin">${deseosUI(ctx)}
+    const tb = (v, on) => `<button type="button" class="${on ? 'on' : ''}" data-acc="ntam" data-v="${v}" aria-pressed="${on}">${v} velas</button>`;
+    return `<div data-form="sin"><div class="f-lbl">Tamaño del paquete</div><div class="seg seg2 f-seg">${tb(5, N === 5)}${tb(7, N === 7)}</div>${deseosUI(ctx)}
       <button type="button" class="btn main" data-acc="fguardar" ${ctx.sel.length === N ? '' : 'disabled'}>Guardar deseos</button>
-      ${ctx.sel.length === N ? '' : `<div class="f-hint">Elige ${N - ctx.sel.length} más</div>`}</div>`;
+      ${ctx.sel.length === N ? '' : `<div class="f-hint">${ctx.sel.length > N ? `Desmarca ${ctx.sel.length - N}` : `Elige ${N - ctx.sel.length} más`}</div>`}</div>`;
   }
 
   async function guardarDeseos(p) {
@@ -727,7 +750,7 @@
     await enviarCambios();
     ocupado(true);
     silenciar(p.id);
-    api('guardarDeseos', { id: p.id, color: ctx.color, rojas, verdes }).then(d => {
+    api('editarPaquete', { id: p.id, tamano: ctx.N, color: ctx.color, rojas, verdes }).then(d => {
       ocupado(false); forms.sin = null; abierto = null; recibir(d);
       const q = D.paquetes.find(x => x.id === p.id), f = q ? faltan(q) : 0;
       avisoRico({ titulo: `Deseos de ${p.persona} guardados`,
@@ -737,9 +760,21 @@
   }
 
   // ---- Nuevo paquete: botón flotante + hoja inferior ----
-  function abrirNuevo() {
-    forms.nuevo = { key: 'nuevo', N: 7, cant: 1, color: 'Mixto', modo: 'ya', sel: [], swap: {}, lista: false, persona: '', excluir: null };
-    document.getElementById('nNombre').value = '';
+  function abrirNuevo(editar) {
+    if (editar && editar.id) {
+      const p = editar, sel = [...p.rojas, ...p.verdes, ...p.rosadas], mapa = {};
+      p.rojas.forEach(w => mapa[w] = 'R'); p.verdes.forEach(w => mapa[w] = 'V'); p.rosadas.forEach(w => mapa[w] = 'P');
+      forms.nuevo = { key: 'nuevo', editId: p.id, N: p.tamano, cant: 1, color: colorValido(p.color), modo: sel.length ? 'ya' : 'luego',
+        sel, swap: {}, lista: false, persona: p.persona, excluir: p.id, rosa: new Set(p.rosadas.map(norm)),
+        orig: { N: p.tamano, color: colorValido(p.color), sel: sel.slice(), mapa } };
+      document.getElementById('nNombre').value = p.persona;
+    } else {
+      forms.nuevo = { key: 'nuevo', N: 7, cant: 1, color: 'Mixto', modo: 'ya', sel: [], swap: {}, lista: false, persona: '', excluir: null };
+      document.getElementById('nNombre').value = '';
+    }
+    const ed = !!forms.nuevo.editId;
+    document.getElementById('nTit').textContent = ed ? 'Editar paquete' : 'Nuevo paquete';
+    document.getElementById('nGuardar').innerHTML = ed ? 'Guardar cambios' : '<i class="ti ti-plus" aria-hidden="true"></i> Agregar paquete';
     pintarNuevo();
     const sh = document.getElementById('sheet');
     sh.hidden = false; requestAnimationFrame(() => sh.classList.add('open'));
@@ -764,8 +799,8 @@
         ${opt('fcolorN', 'Mixto', ctx.color === 'Mixto', sw('linear-gradient(90deg,var(--rojo) 50%,var(--verde) 50%)'), 'Mixto')}
         ${opt('fcolorN', 'Rojo', ctx.color === 'Rojo', sw('var(--rojo)'), 'Todo rojo')}
         ${opt('fcolorN', 'Verde', ctx.color === 'Verde', sw('var(--verde)'), 'Todo verde')}</div>
-      <div class="f-lbl n-lbl">Cuántos paquetes</div>
-      <div class="stp n-stp"><button type="button" data-acc="ncant" data-v="-1" aria-label="Un paquete menos" ${ctx.cant <= 1 ? 'disabled' : ''}>−</button><span aria-live="polite">${ctx.cant}</span><button type="button" data-acc="ncant" data-v="1" aria-label="Un paquete más">+</button></div>
+      ${ctx.editId ? '' : `<div class="f-lbl n-lbl">Cuántos paquetes</div>
+      <div class="stp n-stp"><button type="button" data-acc="ncant" data-v="-1" aria-label="Un paquete menos" ${ctx.cant <= 1 ? 'disabled' : ''}>−</button><span aria-live="polite">${ctx.cant}</span><button type="button" data-acc="ncant" data-v="1" aria-label="Un paquete más">+</button></div>`}
       <button type="button" class="n-tg" role="switch" aria-checked="${ctx.modo === 'ya'}" data-acc="nmodo" data-v="${ctx.modo === 'ya' ? 'luego' : 'ya'}"><span>Ya sé los deseos</span><span class="n-sw2" aria-hidden="true"></span></button>`;
     if (ctx.modo === 'ya') {
       h += deseosUI(ctx, false);
@@ -780,9 +815,10 @@
     const nombre = document.getElementById('nNombre').value.trim();
     ctx.persona = nombre;
     const okDeseos = ctx.modo === 'luego' || ctx.sel.length === ctx.N;
-    const colorDe = c => c === 'R' ? 'var(--rojo-v)' : 'var(--verde-v)';
+    const colorDe = c => c === 'R' ? 'var(--rojo-v)' : c === 'P' ? 'var(--rosa)' : 'var(--verde-v)';
     let velas = [];
     if (ctx.modo === 'ya' && ctx.sel.length === ctx.N) velas = decidirColores(ctx).map(c => ({ c: colorDe(c) }));
+    else if (ctx.modo === 'ya' && ctx.sel.length > ctx.N) velas = Array.from({ length: ctx.N }, (_, i) => ({ c: colorDe(i % 2 ? 'V' : 'R') }));
     else for (let i = 0; i < ctx.N; i++) {
       const lleno = ctx.modo === 'luego' || i < ctx.sel.length;
       const c = ctx.color === 'Rojo' ? 'R' : ctx.color === 'Verde' ? 'V' : (i % 2 ? 'V' : 'R');
@@ -794,11 +830,25 @@
     document.getElementById('nPt2').textContent = `${({ Mixto: 'Mixto', Rojo: 'Todo rojo', Verde: 'Todo verde' })[ctx.color]} · ${ctx.modo === 'luego' ? 'deseos después' : okDeseos ? 'deseos completos' : `${ctx.sel.length} de ${ctx.N} deseos`}${pl ? ` · ${ctx.cant * ctx.N} velas` : ''}`;
     const btn = document.getElementById('nGuardar');
     btn.disabled = !nombre || !okDeseos;
-    document.getElementById('nHint').textContent = !nombre ? 'Escribe el nombre del comprador' : !okDeseos ? `Elige ${ctx.N - ctx.sel.length} deseos más` : '';
+    document.getElementById('nHint').textContent = !nombre ? 'Escribe el nombre del comprador' : !okDeseos ? (ctx.sel.length > ctx.N ? `Desmarca ${ctx.sel.length - ctx.N} deseos` : `Elige ${ctx.N - ctx.sel.length} deseos más`) : '';
   }
   async function guardarNuevo() {
     const ctx = forms.nuevo; if (!ctx) return;
     const nombre = document.getElementById('nNombre').value.trim(); if (!nombre) return;
+    if (ctx.editId) {
+      let rojas = [], verdes = [], rosadas = [];
+      if (ctx.modo === 'ya') { const c = decidirColores(ctx); ctx.sel.forEach((w, i) => (c[i] === 'R' ? rojas : c[i] === 'P' ? rosadas : verdes).push(w)); }
+      const id = ctx.editId, N = ctx.N, color = ctx.color, antesN = ctx.orig.N;
+      await enviarCambios(); ocupado(true); silenciar(id);
+      api('editarPaquete', { id, persona: nombre, tamano: N, color, rojas, verdes, rosadas }).then(d => {
+        ocupado(false); cerrarNuevo(); recibir(d);
+        const q = D.paquetes.find(x => x.id === id), f = q && q.estado === 'Pendiente' ? faltan(q) : 0;
+        avisoRico({ titulo: `Paquete de ${nombre} actualizado`,
+          detalle: `${antesN !== N ? `Ahora es de ${N} velas` : `${N} velas`} · ${color}${q && q.estado === 'Pendiente' ? (f ? ` · le falta${f === 1 ? '' : 'n'} ${f}` : ' · listo para armar') : ' · sin deseos'}`,
+          tipo: 'ok', ver: id });
+      }).catch(error);
+      return;
+    }
     let paquetes = [];
     if (ctx.modo === 'ya') {
       const c1 = decidirColores(ctx);
@@ -822,7 +872,7 @@
         tipo: 'ok', ver: nuevos[0] && nuevos[0].id });
     }).catch(error);
   }
-  document.getElementById('fab').addEventListener('click', abrirNuevo);
+  document.getElementById('fab').addEventListener('click', () => abrirNuevo());
   document.getElementById('nNombre').addEventListener('input', resumenNuevo);
   document.getElementById('nGuardar').addEventListener('click', guardarNuevo);
   document.getElementById('sheet').addEventListener('click', e => { if (e.target.closest('[data-cerrar]')) cerrarNuevo(); });
@@ -848,7 +898,7 @@
     if (a === 'fcolor' || a === 'fcolorN') { ctx.color = b.dataset.c || b.dataset.v; ctx.swap = {}; repintar(ctx); }
     else if (a === 'fdd') { ctx.lista = !ctx.lista; repintar(ctx); }
     else if (a === 'fswap') { ctx.swap[b.dataset.i] = !ctx.swap[b.dataset.i]; repintar(ctx); }
-    else if (a === 'ntam') { ctx.N = Number(b.dataset.v); ctx.sel = ctx.sel.slice(0, ctx.N); ctx.swap = {}; repintar(ctx); }
+    else if (a === 'ntam') { ctx.N = Number(b.dataset.v); ctx.swap = {}; if (ctx.sel.length > ctx.N) ctx.lista = true; repintar(ctx); }
     else if (a === 'ncant') { ctx.cant = Math.max(1, Math.min(10, ctx.cant + Number(b.dataset.v))); repintar(ctx); }
     else if (a === 'nmodo') { ctx.modo = b.dataset.v; repintar(ctx); }
     else if (a === 'fguardar') { const p = D.paquetes.find(x => x.id === ctx.id); if (p) guardarDeseos(p); }
@@ -911,8 +961,19 @@
 
   function nombre(id) { const p = D.paquetes.find(x => x.id === id); return p ? p.persona : 'Paquete'; }
   // La fila que acabas de armar o deshacer se queda en su pestaña y grupo hasta que cambies de pestaña o busques
+  const grupoArmado = p => p.estado === 'Entregado' ? (p.fechaPago ? 2 : 1) : 0;
   function fijar(id) { const p = D.paquetes.find(x => x.id === id); if (!p || id in fijos) return;
-    fijos[id] = { tab: pestana, r: pestana === 'a' ? (p.estado === 'Entregado' ? 1 : 0) : (faltan(p) ? 1 : 0) }; }
+    fijos[id] = { tab: pestana, r: pestana === 'a' ? grupoArmado(p) : (faltan(p) ? 1 : 0) }; }
+
+  async function pagar(id) {
+    fijar(id); await enviarCambios(); ocupado(true);
+    api('pagar', { id }).then(d => { ocupado(false); recibir(d);
+      avisoRico({ titulo: `${nombre(id)}: pagado`, detalle: 'Paquete entregado y cobrado', tipo: 'ok', accion: 'Deshacer', fn: () => despagar(id) }); }).catch(error);
+  }
+  async function despagar(id) {
+    fijar(id); await enviarCambios(); ocupado(true);
+    api('despagar', { id }).then(d => { ocupado(false); recibir(d); aviso('Pago deshecho. El paquete volvió a Entregados sin pagar.'); }).catch(error);
+  }
 
   async function entregar(id) {
     fijar(id);
@@ -951,6 +1012,9 @@
     else if (b.dataset.acc === 'cancelar') { confirmId = null; pintar(D); }
     else if (b.dataset.acc === 'desarmar') desarmar(id);
     else if (b.dataset.acc === 'entregar') entregar(id);
+    else if (b.dataset.acc === 'pagar') pagar(id);
+    else if (b.dataset.acc === 'despagar') despagar(id);
+    else if (b.dataset.acc === 'editar') { const p = D.paquetes.find(x => x.id === id); if (p) abrirNuevo(p); }
     else if (b.dataset.acc === 'desentregar') desentregar(id);
   });
 
