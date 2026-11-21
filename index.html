@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Velas de deseos</title>
-<meta name="app-version" content="2026-11-21-hoja-nueva">
+<meta name="app-version" content="2026-11-21-botones">
 <meta name="theme-color" content="#f6f3ee">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3/dist/tabler-icons.min.css">
 <style>
@@ -242,6 +242,26 @@
   .btn:disabled{background:#d9cfc2;border-color:#d9cfc2;cursor:default}
   .armado-el{font-size:12px;color:var(--txt2);display:flex;justify-content:space-between;align-items:center}
   @media (prefers-reduced-motion: reduce){ *{transition-property:opacity!important} button:active{transform:none!important} }
+
+  /* ===== Sistema de botones: un solo radio, alturas y estilos para toda la app ===== */
+  :root{ --r-btn:12px; }
+  .btn,.st button,.toast button,.f-cnt button,.stp button,.n-stp button,.sheet-x,.fab,.n-opt,.buscar button,.armado-el .btn{border-radius:var(--r-btn)}
+  .seg{border-radius:var(--r-btn)} .seg button{border-radius:calc(var(--r-btn) - 3px)}   /* concéntrico dentro del selector */
+  .btn{min-height:48px;padding:0 16px;font-size:15px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px;border:1.5px solid var(--line2);background:#fff;color:var(--txt);transition:transform 120ms var(--ease-out),background 150ms ease,border-color 150ms ease}
+  .btn.main{background:var(--cafe);border-color:var(--cafe);color:#fff}
+  .btn:disabled{background:#e4dbcf;border-color:#e4dbcf;color:#fff}
+  .btn.link{width:auto;min-height:40px;margin-top:0;padding:0 14px;font-size:14px;text-decoration:none;border:1.5px solid var(--line2);background:#fff;color:var(--txt)}
+  .sheet-x{height:40px;padding:0 16px;font-size:14px;font-weight:600;text-decoration:none;color:#fff;border:1.5px solid rgba(255,255,255,.45);background:rgba(255,255,255,.1);transition:transform 120ms var(--ease-out),background 150ms ease}
+  .sheet-x:active{background:rgba(255,255,255,.2)}
+  .f-cnt button{height:40px;padding:0 18px;font-weight:600}
+  .toast button{height:38px}
+  .confirma .btn{min-height:44px}
+  .armado-el .btn{flex:none}
+  @media (hover:hover) and (pointer:fine){
+    .btn:not(:disabled):hover{border-color:var(--line2);background:#faf7f2}
+    .btn.main:not(:disabled):hover{background:#6c4427;border-color:#6c4427}
+    .sheet-x:hover{background:rgba(255,255,255,.18)}
+  }
 </style>
 </head>
 <body>
