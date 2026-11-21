@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Velas de deseos</title>
-<meta name="app-version" content="2026-11-21-turnos-color">
+<meta name="app-version" content="2026-11-21-reparto-mixtos">
 <meta name="theme-color" content="#f6f3ee">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3/dist/tabler-icons.min.css">
 <style>
@@ -297,6 +297,9 @@
   .acc-fila .btn-armar{margin:0}
   .stt .f{color:var(--warn)}
   .n-exceso{margin-top:10px}
+  .reparto-link{display:flex;margin:16px auto 0;font-weight:500}
+  .reparto-box{margin-top:16px}
+  .reparto-box b{font-weight:600}
 </style>
 </head>
 <body>
@@ -562,6 +565,7 @@
       const L = lista.filter(p => grupo(p) === 0), F = lista.filter(p => grupo(p) === 1);
       if (L.length) html += `<div class="lbl">Listos · ${L.length}</div><div class="lista">${L.map(p => fila(p, st)).join('')}</div>`;
       if (F.length) html += `<div class="lbl">Les faltan velas · ${F.length}</div><div class="lista">${F.map(p => fila(p, st)).join('')}</div>`;
+      if (!busqueda && planReparto().length) html += repartoUI();
     } else if (pestana === 'a') {
       // Armados: primero los que faltan por entregar, luego los entregados
       const grupoA = p => p.id in fijos ? fijos[p.id].r : grupoArmado(p);
@@ -713,6 +717,62 @@
     }
     Object.keys(ctx.swap).forEach(i => { if (ctx.swap[i] && (res[i] === 'R' || res[i] === 'V')) res[i] = res[i] === 'R' ? 'V' : 'R'; });
     return res;
+  }
+
+  // ---- Repartir de nuevo los colores de los mixtos por armar: mayoría roja y verde por turnos ----
+  let repartoAbierto = false;
+  function planReparto() {
+    const st = stockMap();
+    const pend = D.paquetes.filter(p => p.estado === 'Pendiente' && p.color === 'Mixto' && p.rojas.length + p.verdes.length > 1);
+    const hechos = {}; let turno = 0; const plan = [];
+    pend.forEach(p => {
+      const sel = [...p.rojas, ...p.verdes], n = sel.length;
+      const nr = n % 2 ? (turno++ % 2 === 0 ? Math.ceil(n / 2) : Math.floor(n / 2)) : n / 2;
+      const hermanos = {};
+      Object.values(hechos).filter(h => norm(h.persona) === norm(p.persona)).forEach(h => { h.rojas.forEach(d => hermanos[norm(d)] = 'R'); h.verdes.forEach(d => hermanos[norm(d)] = 'V'); });
+      let mejor = 0, mejorPts = -1e9;
+      for (let mask = 0; mask < (1 << n); mask++) {
+        let c = 0; for (let j = 0; j < n; j++) if (mask & (1 << j)) c++;
+        if (c !== nr) continue;
+        let pts = 0;
+        for (let j = 0; j < n; j++) {
+          const col = (mask & (1 << j)) ? 'R' : 'V', h = hermanos[norm(sel[j])];
+          if (h) pts += h !== col ? 5 : -5;                                     // contrario a su otro paquete
+          const k = key(sel[j], col === 'R' ? 'Rojo' : 'Verde'); if (st[k] && st[k].n > 0) pts += 0.5;   // ya hay hechas
+          if (p.rojas.includes(sel[j]) === (col === 'R')) pts += 0.2;          // cambiar lo menos posible
+        }
+        if (pts > mejorPts) { mejorPts = pts; mejor = mask; }
+      }
+      const rojas = sel.filter((_, j) => mejor & (1 << j)), verdes = sel.filter((_, j) => !(mejor & (1 << j)));
+      hechos[p.id] = { persona: p.persona, rojas, verdes };
+      const igual = rojas.length === p.rojas.length && rojas.every(d => p.rojas.includes(d));
+      if (!igual) plan.push({ id: p.id, persona: p.persona, rojas, verdes, antes: { rojas: p.rojas.slice(), verdes: p.verdes.slice() } });
+    });
+    return plan;
+  }
+  function repartoUI() {
+    const plan = planReparto();
+    if (!repartoAbierto) return `<button class="btn link reparto-link" data-acc="reparto">Repartir de nuevo los colores de los mixtos</button>`;
+    const total = D.paquetes.filter(p => p.estado === 'Pendiente' && p.color === 'Mixto' && (p.rojas.length + p.verdes.length) % 2).length;
+    return `<div class="confirma reparto-box">La app va a alternar los paquetes <b>mixtos por armar</b>: uno con 4 rojas y 3 verdes, el siguiente con 3 rojas y 4 verdes, y así (en los de 5: 3 y 2). Cambian <b>${plan.length}</b> de ${total} paquetes. Los armados, entregados y pagados no se tocan.
+      <div class="acc"><button class="btn" data-acc="repartoNo">Cancelar</button><button class="btn main" data-acc="repartoSi">Sí, repartir</button></div></div>`;
+  }
+  async function aplicarReparto() {
+    const plan = planReparto(); if (!plan.length) return;
+    repartoAbierto = false;
+    await enviarCambios(); ocupado(true);
+    api('reasignarColores', { items: plan.map(x => ({ id: x.id, rojas: x.rojas, verdes: x.verdes })) }).then(d => {
+      ocupado(false); recibir(d);
+      const mr = D.paquetes.filter(p => p.estado === 'Pendiente' && p.color === 'Mixto' && p.rojas.length > p.verdes.length).length;
+      const mv = D.paquetes.filter(p => p.estado === 'Pendiente' && p.color === 'Mixto' && p.verdes.length > p.rojas.length).length;
+      avisoRico({ titulo: `Colores repartidos en ${plan.length} paquetes`, detalle: `${mr} con más rojas · ${mv} con más verdes`, tipo: 'ok', accion: 'Deshacer', fn: () => deshacerReparto(plan) });
+    }).catch(error);
+  }
+  function deshacerReparto(plan) {
+    ocupado(true);
+    api('reasignarColores', { items: plan.map(x => ({ id: x.id, rojas: x.antes.rojas, verdes: x.antes.verdes })) }).then(d => {
+      ocupado(false); recibir(d); aviso('Reparto deshecho. Los colores volvieron a como estaban.');
+    }).catch(error);
   }
 
   // Fueguito que se enciende al marcar un deseo
@@ -1012,6 +1072,9 @@
   document.getElementById('paq').addEventListener('click', e => {
     const b = e.target.closest('button[data-acc]'); if (!b) return;
     const id = b.dataset.id;
+    if (b.dataset.acc === 'reparto') { repartoAbierto = true; pintar(D); return; }
+    if (b.dataset.acc === 'repartoNo') { repartoAbierto = false; pintar(D); return; }
+    if (b.dataset.acc === 'repartoSi') { aplicarReparto(); return; }
     if (b.dataset.acc === 'abrir') { abierto = abierto === id ? null : id; confirmId = null; forms.sin = null; pintar(D); return; }
     if (b.dataset.acc === 'armar') { if (b.dataset.falta === '1') { confirmId = id; pintar(D); } else armar(id); }
     else if (b.dataset.acc === 'armarYa') armar(id);
