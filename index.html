@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Velas de deseos</title>
-<meta name="app-version" content="2026-11-21-instrucciones-3">
+<meta name="app-version" content="2026-11-21-espacios-hoja">
 <meta name="theme-color" content="#f6f3ee">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3/dist/tabler-icons.min.css">
 <style>
@@ -274,6 +274,10 @@
   .nota-prev p{margin:0}
   .nota-prev ol{margin:6px 0;padding-left:20px}
   .nota-prev li{margin:2px 0}
+  /* Más aire entre secciones de la hoja Nuevo paquete */
+  .sheet-body #nDyn .n-lbl, .sheet-body #nDyn > .f-lbl{margin-top:22px}
+  .sheet-body label.n-lbl{margin-top:4px}
+  .sheet-body .n-tg{margin-top:22px}
 </style>
 </head>
 <body>
@@ -291,7 +295,7 @@
     </div>
     <div class="sheet-body">
       <div data-form="nuevo">
-        <label class="f-lbl n-lbl" for="nNombre">¿Quién compró?</label>
+        <label class="f-lbl n-lbl" for="nNombre">Nombre del comprador</label>
         <input id="nNombre" class="in" type="text" placeholder="Nombre comprador" autocomplete="off" autocapitalize="words" enterkeyhint="done">
         <div id="nDyn"></div>
       </div>
