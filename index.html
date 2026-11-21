@@ -79,11 +79,47 @@
   nav button i{font-size:24px}
   nav button.on{color:var(--cafe);font-weight:600}
   .vacio{color:var(--txt2);font-size:14px;text-align:center;padding:24px 0}
-  .toast{position:fixed;left:50%;bottom:calc(76px + env(safe-area-inset-bottom,0px));transform:translate(-50%,8px);opacity:0;pointer-events:none;background:var(--txt);color:#fff;padding:6px 6px 6px 14px;border-radius:12px;font-size:14px;z-index:9;display:flex;align-items:center;gap:10px;min-height:44px;max-width:calc(100% - 28px);transition:opacity 200ms var(--ease-out),transform 200ms var(--ease-out)}
+  /* Avisos */
+  .toast{position:fixed;left:50%;bottom:calc(74px + env(safe-area-inset-bottom,0px));transform:translate(-50%,10px);opacity:0;pointer-events:none;width:min(420px,calc(100% - 24px));background:var(--txt);color:#fff;border-radius:14px;padding:10px 8px 10px 14px;z-index:30;display:flex;align-items:center;gap:10px;min-height:52px;box-shadow:0 8px 24px rgba(43,38,34,.18);transition:opacity 220ms var(--ease-out),transform 220ms var(--ease-out)}
   .toast.show{opacity:1;transform:translate(-50%,0);pointer-events:auto}
-  .toast span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .toast button{border:none;background:rgba(255,255,255,.14);color:#fff;border-radius:8px;height:34px;padding:0 12px;font-size:14px;font-weight:600;cursor:pointer}
+  .toast .t-ic{font-size:22px;flex-shrink:0;color:#f3dcb8}
+  .toast.ok .t-ic{color:#9fd39a} .toast.listo .t-ic{color:#f4c06b}
+  .toast .t-txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+  .toast .t-tit{font-size:14px;font-weight:600;overflow-wrap:anywhere}
+  .toast .t-det{font-size:12.5px;color:#d9cfc2}
+  .toast .t-det:empty{display:none}
+  .toast button{border:none;background:rgba(255,255,255,.14);color:#fff;border-radius:9px;height:38px;padding:0 14px;font-size:14px;font-weight:600;cursor:pointer;flex-shrink:0}
   .toast button:empty{display:none}
+  /* Botón flotante */
+  .fab{position:fixed;right:max(16px,calc((100% - 560px)/2 + 4px));bottom:calc(78px + env(safe-area-inset-bottom,0px));width:58px;height:58px;border-radius:18px;border:none;background:var(--cafe);color:#fff;font-size:28px;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(122,78,45,.35);z-index:20;cursor:pointer;transition:transform 220ms var(--ease-out)}
+  .fab[hidden]{display:none}
+  .fab:active{transform:scale(.94)}
+  body.toast-on .fab{transform:translateY(-66px)}
+  body.toast-on .fab:active{transform:translateY(-66px) scale(.94)}
+  #vPaq{padding-bottom:70px}
+  /* Hoja inferior */
+  .sheet{position:fixed;inset:0;z-index:40}
+  .sheet[hidden]{display:none}
+  .sheet-fondo{position:absolute;inset:0;background:rgba(43,38,34,.4);opacity:0;transition:opacity 250ms ease}
+  .sheet.open .sheet-fondo{opacity:1}
+  .sheet-panel{position:absolute;left:0;right:0;bottom:0;margin:0 auto;max-width:560px;max-height:92dvh;overflow:auto;overscroll-behavior:contain;background:var(--bg);border-radius:20px 20px 0 0;padding:8px 16px calc(18px + env(safe-area-inset-bottom,0px));transform:translateY(100%);transition:transform 300ms cubic-bezier(0.32,0.72,0,1)}
+  .sheet.open .sheet-panel{transform:none}
+  .sheet-asa{width:40px;height:5px;border-radius:3px;background:#d9cfc2;margin:4px auto 8px}
+  .sheet-top{display:flex;justify-content:space-between;align-items:center}
+  .sheet-top h2{font-size:19px;margin:0;font-weight:600}
+  .sheet-top .btn{width:auto;margin:0}
+  .in{width:100%;height:48px;border-radius:12px;border:1px solid var(--line2);padding:0 14px;font-size:16px;color:var(--txt);background:#fff;font-family:inherit}
+  .in:focus{outline:2px solid var(--acc);outline-offset:1px}
+  .g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .seg2{grid-template-columns:1fr 1fr!important}
+  .stp{display:flex;align-items:center;justify-content:space-between;border:1px solid var(--line2);border-radius:12px;height:46px;padding:0 3px;background:#fff}
+  .stp button{width:40px;height:38px;border:none;background:#f1ece4;border-radius:9px;font-size:19px;color:var(--txt);cursor:pointer}
+  .stp span{font-size:17px;font-weight:600;font-variant-numeric:tabular-nums}
+  .n-res{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-top:16px;font-size:14px;line-height:1.5}
+  .n-res b{font-weight:600} .n-res span{color:var(--txt2);font-size:13px}
+  #nGuardar{margin-top:12px}
+  body.sin-scroll{overflow:hidden}
+  @media (prefers-reduced-motion: reduce){ .sheet-panel{transform:none!important;opacity:0;transition:opacity 200ms} .sheet.open .sheet-panel{opacity:1} .toast{transform:translate(-50%,0)!important} body.toast-on .fab{transform:none} }
   .buscar{position:relative;margin-bottom:10px}
   .buscar input{width:100%;height:44px;border-radius:12px;border:1px solid var(--line2);background:#fff;padding:0 40px 0 38px;font-size:16px;color:var(--txt);font-family:inherit}
   .buscar input:focus{outline:2px solid var(--acc);outline-offset:1px}
@@ -173,7 +209,23 @@
 <body>
 <header><i class="ti ti-flame" aria-hidden="true"></i><h1 id="titulo">Velas</h1>
   <button class="estado saving" id="estado" aria-live="polite" disabled><i></i><span>Cargando…</span></button></header>
-<div class="toast" id="toast" role="status"><span></span><button type="button"></button></div>
+<div class="toast" id="toast" role="status" aria-live="polite"><i class="t-ic ti ti-info-circle" aria-hidden="true"></i><span class="t-txt"><b class="t-tit"></b><small class="t-det"></small></span><button type="button"></button></div>
+<button class="fab" id="fab" aria-label="Nuevo paquete" hidden><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+<div class="sheet" id="sheet" hidden>
+  <div class="sheet-fondo" data-cerrar></div>
+  <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="nTit">
+    <div class="sheet-asa" aria-hidden="true"></div>
+    <div class="sheet-top"><h2 id="nTit">Nuevo paquete</h2><button type="button" class="btn link" data-cerrar>Cancelar</button></div>
+    <div data-form="nuevo">
+      <label class="f-lbl" for="nNombre">Nombre de quien compró</label>
+      <input id="nNombre" class="in" type="text" placeholder="Carolina" autocomplete="off" autocapitalize="words" enterkeyhint="done">
+      <div id="nDyn"></div>
+    </div>
+    <div class="n-res" id="nRes"></div>
+    <button type="button" class="btn main" id="nGuardar" disabled><i class="ti ti-plus" aria-hidden="true"></i> Agregar paquete</button>
+    <div class="f-hint" id="nHint"></div>
+  </div>
+</div>
 
 <main>
   <section id="vVelas">
@@ -291,12 +343,51 @@
   document.getElementById('estado').addEventListener('click', () => {
     if (document.getElementById('estado').classList.contains('err')) enviarCambios();
   });
-  function aviso(t, accion, fn) {
-    const el = document.getElementById('toast'), b = el.querySelector('button');
-    el.querySelector('span').textContent = t; b.textContent = accion || '';
-    b.onclick = () => { el.classList.remove('show'); fn && fn(); };
-    el.classList.add('show'); clearTimeout(el._t);
-    el._t = setTimeout(() => el.classList.remove('show'), accion ? 6000 : 2500);
+  // Avisos en cola: uno a la vez, con título, detalle opcional y una acción (Deshacer, Ver)
+  const colaAvisos = []; let avisoActivo = false;
+  function aviso(t, accion, fn) { avisoRico({ titulo: t, accion, fn }); }
+  function avisoRico(o) {
+    if (o.ver && !o.accion) { o.accion = 'Ver'; o.fn = () => verPaquete(o.ver); }
+    colaAvisos.push(o); if (!avisoActivo) siguienteAviso();
+  }
+  function siguienteAviso() {
+    const o = colaAvisos.shift(); const el = document.getElementById('toast');
+    if (!o) { avisoActivo = false; document.body.classList.remove('toast-on'); return; }
+    avisoActivo = true;
+    el.className = 'toast ' + (o.tipo || '');
+    el.querySelector('.t-tit').textContent = o.titulo;
+    el.querySelector('.t-det').textContent = o.detalle || '';
+    const b = el.querySelector('button'); b.textContent = o.accion || '';
+    const ic = el.querySelector('.t-ic'); ic.className = 't-ic ti ' + (o.tipo === 'ok' ? 'ti-circle-check' : o.tipo === 'listo' ? 'ti-gift' : 'ti-info-circle');
+    const cerrar = () => { clearTimeout(el._t); el.classList.remove('show'); setTimeout(siguienteAviso, 220); };
+    b.onclick = () => { cerrar(); o.fn && o.fn(); };
+    requestAnimationFrame(() => { el.classList.add('show'); document.body.classList.add('toast-on'); });
+    el._t = setTimeout(cerrar, o.accion ? 6000 : 3500);
+  }
+  function verPaquete(id) {
+    const p = D.paquetes.find(x => x.id === id); if (!p) return;
+    ir('P');
+    const t = p.estado === 'Armado' ? 'a' : p.estado === 'Esperando deseos' ? 's' : 'p';
+    const b = document.querySelector(`#seg button[data-t="${t}"]`); if (b) b.click();
+    abierto = id; pintar(D);
+    const r = document.querySelector(`.rh[data-id="${CSS.escape(id)}"]`); if (r) r.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  }
+  // Paquetes que quedan listos después de un cambio (sumar velas, deshacer, etc.)
+  let listosAntes = null; const silencio = new Set();
+  function silenciar(id) { silencio.add(id); }
+  function revisarListos() {
+    const ahora = new Set(D.paquetes.filter(p => p.estado === 'Pendiente' && !faltan(p)).map(p => p.id));
+    if (listosAntes && cargado) {
+      const nuevos = [...ahora].filter(id => !listosAntes.has(id) && !silencio.has(id));
+      if (nuevos.length) {
+        const ps = nuevos.map(id => D.paquetes.find(p => p.id === id));
+        const nombres = ps.map(p => p.persona + (/^1 de 1$/.test(p.numero) ? '' : ` (${p.numero})`));
+        avisoRico(nuevos.length === 1
+          ? { titulo: `${nombres[0]}: listo para armar`, detalle: 'Ya tiene todas sus velas en el inventario', tipo: 'listo', ver: nuevos[0] }
+          : { titulo: `${nuevos.length} paquetes listos para armar`, detalle: nombres.slice(0, 3).join(', ') + (nombres.length > 3 ? ' y más' : ''), tipo: 'listo', accion: 'Ver', fn: () => verPaquete(nuevos[0]) });
+      }
+    }
+    silencio.clear(); listosAntes = ahora;
   }
 
   function stockMap() { const m = {}; D.inventario.forEach(r => m[key(r.deseo, r.color)] = { deseo:r.deseo, color:r.color, n:r.hechas }); return m; }
@@ -321,6 +412,7 @@
     D = data;
     const st = stockMap(), nec = necesarioMap(), prev = previstasMap();
     asignar(st);
+    revisarListos();
 
     // Lista de deseos: los de la pestaña Deseos + cualquiera que aparezca en paquetes o inventario
     const orden = [...D.deseos];
@@ -454,24 +546,25 @@
     return `<div class="rw open">${cab}<div class="det"><div class="cols" style="grid-template-columns:repeat(${cols.length},minmax(0,1fr))">${cols.join('')}</div>${cuenta}${revisar}${apartadas}${acc}</div></div>`;
   }
 
-  // ---- Escribir deseos desde la app: la app decide rojas y verdes ----
-  let form = null;   // {id, color, sel:[], swap:{}, lista:false}
-  function abrirForm(p) {
-    const c = ['Mixto', 'Rojo', 'Verde'].includes(p.color) ? p.color : 'Mixto';
-    form = { id: p.id, color: c, sel: [], swap: {}, lista: false };
+  // ---- Elegir deseos (mismo componente en "Sin deseos" y en "Nuevo paquete"); la app decide rojas y verdes ----
+  // ctx = {key, N, color, sel:[], swap:{}, lista:false, persona, excluir}
+  let forms = { sin: null, nuevo: null };
+  const colorValido = c => ['Mixto', 'Rojo', 'Verde'].includes(c) ? c : 'Mixto';
+  function abrirFormSin(p) {
+    forms.sin = { key: 'sin', id: p.id, N: p.tamano, color: colorValido(p.color), sel: [], swap: {}, lista: false, persona: p.persona, excluir: p.id };
   }
-  // Reparte colores: mitad y mitad en mixtos; prefiere el color que ya hay hecho (sobrante del inventario)
-  // y, si la persona tiene otro paquete, pone cada deseo repetido en el color contrario.
-  function decidirColores(p) {
-    const sel = form.sel, n = sel.length;
-    if (form.color === 'Rojo') return sel.map(() => 'R');
-    if (form.color === 'Verde') return sel.map(() => 'V');
+
+  // Mitad y mitad en mixtos; prefiere el color que ya hay hecho (sobrante del inventario) y,
+  // si la persona tiene otro paquete, pone cada deseo repetido en el color contrario.
+  function decidirColores(ctx) {
+    const sel = ctx.sel, n = sel.length;
+    if (ctx.color === 'Rojo') return sel.map(() => 'R');
+    if (ctx.color === 'Verde') return sel.map(() => 'V');
     const hermanos = {};
-    D.paquetes.filter(q => q.id !== p.id && norm(q.persona) === norm(p.persona)).forEach(q => {
+    D.paquetes.filter(q => q.id !== ctx.excluir && norm(q.persona) === norm(ctx.persona || '')).forEach(q => {
       q.rojas.forEach(d => hermanos[norm(d)] = 'R'); q.verdes.forEach(d => hermanos[norm(d)] = 'V');
     });
-    const disp = Object.assign({}, sobrante);
-    let mejor = null, mejorPts = -1e9;
+    let mejor = 0, mejorPts = -1e9;
     const tamR = [Math.floor(n / 2), Math.ceil(n / 2)];
     for (let mask = 0; mask < (1 << n); mask++) {
       let nr = 0; for (let i = 0; i < n; i++) if (mask & (1 << i)) nr++;
@@ -480,49 +573,158 @@
       for (let i = 0; i < n; i++) {
         const c = (mask & (1 << i)) ? 'R' : 'V', k = key(sel[i], c === 'R' ? 'Rojo' : 'Verde');
         usa[k] = (usa[k] || 0) + 1;
-        if ((disp[k] || 0) >= usa[k]) pts += 3;                    // ya está hecha
-        const h = hermanos[norm(sel[i])]; if (h) pts += h !== c ? 5 : -5;   // contrario al otro paquete
-        pts -= i * 0.001 * (c === 'R' ? 1 : -1);                    // desempate estable
+        if ((sobrante[k] || 0) >= usa[k]) pts += 3;
+        const h = hermanos[norm(sel[i])]; if (h) pts += h !== c ? 5 : -5;
+        pts -= i * 0.001 * (c === 'R' ? 1 : -1);
       }
       if (pts > mejorPts) { mejorPts = pts; mejor = mask; }
     }
     const res = sel.map((_, i) => (mejor & (1 << i)) ? 'R' : 'V');
-    Object.keys(form.swap).forEach(i => { if (form.swap[i] && res[i]) res[i] = res[i] === 'R' ? 'V' : 'R'; });
+    Object.keys(ctx.swap).forEach(i => { if (ctx.swap[i] && res[i]) res[i] = res[i] === 'R' ? 'V' : 'R'; });
     return res;
   }
-  function formulario(p) {
-    if (!form || form.id !== p.id) abrirForm(p);
-    const N = p.tamano, sel = form.sel, lleno = sel.length >= N;
-    const lista = [...new Set(D.deseos.length ? D.deseos : [])].sort((a, b) => a.localeCompare(b, 'es'));
-    const segBtn = (c, t) => `<button type="button" class="${form.color === c ? 'on' : ''}" data-acc="fcolor" data-c="${c}" aria-pressed="${form.color === c}">${t}</button>`;
-    let h = `<div class="f-lbl">Color del paquete</div><div class="seg f-seg">${segBtn('Mixto','Mixto')}${segBtn('Rojo','Todo rojo')}${segBtn('Verde','Todo verde')}</div>
-      <div class="f-lbl">Deseos que pidió</div>
-      <div class="f-dd ${form.lista ? 'open' : ''}"><button type="button" class="f-dd-btn" data-acc="fdd" aria-expanded="${form.lista}">
+
+  // Color + lista desplegable con casillas + "Así quedan los colores"
+  function deseosUI(ctx, conColor = true) {
+    const N = ctx.N, sel = ctx.sel, lleno = sel.length >= N;
+    const lista = [...D.deseos].sort((a, b) => a.localeCompare(b, 'es'));
+    const segBtn = (c, t) => `<button type="button" class="${ctx.color === c ? 'on' : ''}" data-acc="fcolor" data-c="${c}" aria-pressed="${ctx.color === c}">${t}</button>`;
+    let h = conColor ? `<div class="f-lbl">Color del paquete</div><div class="seg f-seg">${segBtn('Mixto','Mixto')}${segBtn('Rojo','Todo rojo')}${segBtn('Verde','Todo verde')}</div>` : '';
+    h += `<div class="f-lbl">Deseos que pidió</div>
+      <div class="f-dd ${ctx.lista ? 'open' : ''}"><button type="button" class="f-dd-btn" data-acc="fdd" aria-expanded="${ctx.lista}">
         <span class="${sel.length ? '' : 'f-ph'}">${sel.length ? sel.map(esc).join(', ') : 'Elegir deseos…'}</span><i class="ti ti-chevron-down" aria-hidden="true"></i></button>`;
-    if (form.lista) h += `<div class="f-opts">${lista.map(w => { const on = sel.includes(w), off = lleno && !on;
+    if (ctx.lista) h += `<div class="f-opts">${lista.map(w => { const on = sel.includes(w), off = lleno && !on;
         return `<label class="f-op ${off ? 'off' : ''}"><input type="checkbox" data-fw="${esc(w)}" ${on ? 'checked' : ''} ${off ? 'disabled' : ''}>${esc(w)}</label>`; }).join('')}
         <div class="f-cnt"><span><b>${sel.length} de ${N}</b> elegidos</span><button type="button" data-acc="fdd">Listo</button></div></div>`;
     h += `</div>`;
     if (sel.length === N) {
-      const c = decidirColores(p), L = k => sel.map((w, i) => [w, i]).filter(x => c[x[1]] === k);
-      const ul = k => `<ul>${L(k).map(([w, i]) => `<li>${form.color === 'Mixto' ? `<button type="button" data-acc="fswap" data-i="${i}">${esc(w)}</button>` : esc(w)}</li>`).join('') || '<li class="f-vac">—</li>'}</ul>`;
-      h += `<div class="f-lbl">Así quedan los colores</div><div class="f-prev"><div><h4><span class="dot" style="background:var(--rojo)"></span>Rojas</h4>${ul('R')}</div><div><h4><span class="dot" style="background:var(--verde)"></span>Verdes</h4>${ul('V')}</div></div>
-        <div class="f-why">${form.color === 'Mixto' ? 'Mitad y mitad, priorizando el color que ya tienes hecho' + (D.paquetes.some(q => q.id !== p.id && norm(q.persona) === norm(p.persona)) ? ' y poniendo en color contrario lo que se repite con su otro paquete' : '') + '. Toca un deseo para cambiarle el color.' : 'Todas las velas van en ' + (form.color === 'Rojo' ? 'rojo' : 'verde') + '.'}</div>`;
+      const c = decidirColores(ctx), L = k => sel.map((w, i) => [w, i]).filter(x => c[x[1]] === k);
+      const ul = k => `<ul>${L(k).map(([w, i]) => `<li>${ctx.color === 'Mixto' ? `<button type="button" data-acc="fswap" data-i="${i}">${esc(w)}</button>` : esc(w)}</li>`).join('') || '<li class="f-vac">—</li>'}</ul>`;
+      const tieneOtro = D.paquetes.some(q => q.id !== ctx.excluir && norm(q.persona) === norm(ctx.persona || ''));
+      h += `<div class="f-lbl">${(ctx.cant || 1) > 1 ? 'Así quedan los colores del paquete 1' : 'Así quedan los colores'}</div><div class="f-prev"><div><h4><span class="dot" style="background:var(--rojo)"></span>Rojas</h4>${ul('R')}</div><div><h4><span class="dot" style="background:var(--verde)"></span>Verdes</h4>${ul('V')}</div></div>
+        <div class="f-why">${ctx.color === 'Mixto' ? 'Mitad y mitad, priorizando el color que ya tienes hecho' + (tieneOtro ? ' y poniendo en color contrario lo que se repite en su otro paquete' : '') + '. Toca un deseo para cambiarle el color.' : 'Todas las velas van en ' + (ctx.color === 'Rojo' ? 'rojo' : 'verde') + '.'}</div>`;
     }
-    h += `<button type="button" class="btn main" data-acc="fguardar" data-id="${esc(p.id)}" ${sel.length === N ? '' : 'disabled'}>Guardar deseos</button>
-      ${sel.length === N ? '' : `<div class="f-hint">Elige ${N - sel.length} más</div>`}`;
     return h;
   }
+
+  function formulario(p) {
+    if (!forms.sin || forms.sin.id !== p.id) abrirFormSin(p);
+    const ctx = forms.sin, N = ctx.N;
+    return `<div data-form="sin">${deseosUI(ctx)}
+      <button type="button" class="btn main" data-acc="fguardar" ${ctx.sel.length === N ? '' : 'disabled'}>Guardar deseos</button>
+      ${ctx.sel.length === N ? '' : `<div class="f-hint">Elige ${N - ctx.sel.length} más</div>`}</div>`;
+  }
+
   async function guardarDeseos(p) {
-    const c = decidirColores(p);
-    const rojas = form.sel.filter((_, i) => c[i] === 'R'), verdes = form.sel.filter((_, i) => c[i] === 'V');
+    const ctx = forms.sin, c = decidirColores(ctx);
+    const rojas = ctx.sel.filter((_, i) => c[i] === 'R'), verdes = ctx.sel.filter((_, i) => c[i] === 'V');
     await enviarCambios();
     ocupado(true);
-    api('guardarDeseos', { id: p.id, color: form.color, rojas, verdes }).then(d => {
-      ocupado(false); form = null; abierto = null; recibir(d);
-      aviso(`Deseos de ${p.persona} guardados`);
+    silenciar(p.id);
+    api('guardarDeseos', { id: p.id, color: ctx.color, rojas, verdes }).then(d => {
+      ocupado(false); forms.sin = null; abierto = null; recibir(d);
+      const q = D.paquetes.find(x => x.id === p.id), f = q ? faltan(q) : 0;
+      avisoRico({ titulo: `Deseos de ${p.persona} guardados`,
+        detalle: `${rojas.length} roja${rojas.length === 1 ? '' : 's'} y ${verdes.length} verde${verdes.length === 1 ? '' : 's'} · ${f ? `le falta${f === 1 ? '' : 'n'} ${f} vela${f === 1 ? '' : 's'}` : 'listo para armar'}`,
+        tipo: f ? 'info' : 'ok', ver: p.id });
     }).catch(error);
   }
+
+  // ---- Nuevo paquete: botón flotante + hoja inferior ----
+  function abrirNuevo() {
+    forms.nuevo = { key: 'nuevo', N: 7, cant: 1, color: 'Mixto', modo: 'ya', sel: [], swap: {}, lista: false, persona: '', excluir: null };
+    document.getElementById('nNombre').value = '';
+    pintarNuevo();
+    const sh = document.getElementById('sheet');
+    sh.hidden = false; requestAnimationFrame(() => sh.classList.add('open'));
+    document.body.classList.add('sin-scroll');
+    setTimeout(() => document.getElementById('nNombre').focus(), 250);
+  }
+  function cerrarNuevo() {
+    const sh = document.getElementById('sheet'); sh.classList.remove('open');
+    document.body.classList.remove('sin-scroll');
+    setTimeout(() => { sh.hidden = true; forms.nuevo = null; }, 260);
+    document.getElementById('fab').focus();
+  }
+  function pintarNuevo() {
+    const ctx = forms.nuevo; if (!ctx) return;
+    const segV = (acc, v, t, on) => `<button type="button" class="${on ? 'on' : ''}" data-acc="${acc}" data-v="${v}" aria-pressed="${on}">${t}</button>`;
+    let h = `<div class="g2"><div><div class="f-lbl">Velas por paquete</div><div class="seg seg2">${segV('ntam', 5, '5', ctx.N === 5)}${segV('ntam', 7, '7', ctx.N === 7)}</div></div>
+      <div><div class="f-lbl">Cuántos paquetes</div><div class="stp"><button type="button" data-acc="ncant" data-v="-1" aria-label="Un paquete menos">−</button><span aria-live="polite">${ctx.cant}</span><button type="button" data-acc="ncant" data-v="1" aria-label="Un paquete más">+</button></div></div></div>
+      <div class="f-lbl">Color del paquete</div><div class="seg f-seg">${segV('fcolorN','Mixto','Mixto',ctx.color==='Mixto')}${segV('fcolorN','Rojo','Todo rojo',ctx.color==='Rojo')}${segV('fcolorN','Verde','Todo verde',ctx.color==='Verde')}</div>
+      <div class="f-lbl">¿Ya sabes los deseos?</div><div class="seg seg2">${segV('nmodo','ya','Sí, ya los sé',ctx.modo==='ya')}${segV('nmodo','luego','Después',ctx.modo==='luego')}</div>`;
+    if (ctx.modo === 'ya') {
+      h += deseosUI(ctx, false);
+      if (ctx.cant > 1) h += `<div class="f-why">Los ${ctx.cant} paquetes llevan los mismos deseos; la app pone cada deseo en un color distinto en cada paquete.</div>`;
+    } else h += `<div class="f-why">El paquete queda en <b>Sin deseos</b> y los escribes cuando te los digan.</div>`;
+    document.getElementById('nDyn').innerHTML = h;
+    resumenNuevo();
+  }
+  function resumenNuevo() {
+    const ctx = forms.nuevo; if (!ctx) return;
+    const nombre = document.getElementById('nNombre').value.trim();
+    ctx.persona = nombre;
+    const okDeseos = ctx.modo === 'luego' || ctx.sel.length === ctx.N;
+    const pl = ctx.cant > 1;
+    document.getElementById('nRes').innerHTML = `Se agrega${pl ? 'n' : ''} <b>${ctx.cant} paquete${pl ? 's' : ''} de ${ctx.N} velas</b>${nombre ? ` para <b>${esc(nombre)}</b>` : ''} · ${ctx.color}${ctx.modo === 'ya' ? (okDeseos ? ' · con deseos' : ` · faltan ${ctx.N - ctx.sel.length} deseos`) : ' · deseos después'}.<br><span>Suma ${ctx.cant * ctx.N} velas al total.</span>`;
+    const btn = document.getElementById('nGuardar');
+    btn.disabled = !nombre || !okDeseos;
+    document.getElementById('nHint').textContent = !nombre ? 'Escribe el nombre de quien compró' : !okDeseos ? `Elige ${ctx.N - ctx.sel.length} deseos más` : '';
+  }
+  async function guardarNuevo() {
+    const ctx = forms.nuevo; if (!ctx) return;
+    const nombre = document.getElementById('nNombre').value.trim(); if (!nombre) return;
+    let paquetes = [];
+    if (ctx.modo === 'ya') {
+      const c1 = decidirColores(ctx);
+      for (let k = 0; k < ctx.cant; k++) {
+        const c = (k % 2 === 0 || ctx.color !== 'Mixto') ? c1 : c1.map(x => x === 'R' ? 'V' : 'R');
+        paquetes.push({ rojas: ctx.sel.filter((_, i) => c[i] === 'R'), verdes: ctx.sel.filter((_, i) => c[i] === 'V') });
+      }
+    }
+    await enviarCambios();
+    ocupado(true);
+    const antes = new Set(D.paquetes.map(p => p.id));
+    api('agregarPaquetes', { persona: nombre, tamano: ctx.N, cantidad: ctx.cant, color: ctx.color, paquetes }).then(d => {
+      ocupado(false);
+      d.paquetes.filter(p => !antes.has(p.id)).forEach(p => silenciar(p.id));
+      const cant = ctx.cant, N = ctx.N, con = ctx.modo === 'ya';
+      cerrarNuevo(); recibir(d);
+      const nuevos = D.paquetes.filter(p => !antes.has(p.id));
+      const listos = nuevos.filter(p => p.estado === 'Pendiente' && !faltan(p)).length;
+      avisoRico({ titulo: cant > 1 ? `${cant} paquetes de ${nombre} agregados` : `Paquete de ${nombre} agregado`,
+        detalle: `${cant * N} velas · ${con ? (listos === nuevos.length ? 'listo para armar' : listos ? `${listos} listo${listos > 1 ? 's' : ''} para armar` : 'quedó en Por armar') : 'quedó en Sin deseos'}`,
+        tipo: 'ok', ver: nuevos[0] && nuevos[0].id });
+    }).catch(error);
+  }
+  document.getElementById('fab').addEventListener('click', abrirNuevo);
+  document.getElementById('nNombre').addEventListener('input', resumenNuevo);
+  document.getElementById('nGuardar').addEventListener('click', guardarNuevo);
+  document.getElementById('sheet').addEventListener('click', e => { if (e.target.closest('[data-cerrar]')) cerrarNuevo(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && forms.nuevo) cerrarNuevo(); });
+
+  // Acciones compartidas del selector de deseos (Sin deseos y Nuevo paquete)
+  function ctxDe(el) { const f = el.closest('[data-form]'); return f ? forms[f.dataset.form] : null; }
+  function repintar(ctx) { if (ctx.key === 'nuevo') pintarNuevo(); else pintar(D); }
+  document.addEventListener('click', e => {
+    const b = e.target.closest('button[data-acc]'); if (!b) return;
+    const ctx = ctxDe(b); if (!ctx) return;
+    const a = b.dataset.acc;
+    if (a === 'fcolor' || a === 'fcolorN') { ctx.color = b.dataset.c || b.dataset.v; ctx.swap = {}; repintar(ctx); }
+    else if (a === 'fdd') { ctx.lista = !ctx.lista; repintar(ctx); }
+    else if (a === 'fswap') { ctx.swap[b.dataset.i] = !ctx.swap[b.dataset.i]; repintar(ctx); }
+    else if (a === 'ntam') { ctx.N = Number(b.dataset.v); ctx.sel = ctx.sel.slice(0, ctx.N); ctx.swap = {}; repintar(ctx); }
+    else if (a === 'ncant') { ctx.cant = Math.max(1, Math.min(10, ctx.cant + Number(b.dataset.v))); repintar(ctx); }
+    else if (a === 'nmodo') { ctx.modo = b.dataset.v; repintar(ctx); }
+    else if (a === 'fguardar') { const p = D.paquetes.find(x => x.id === ctx.id); if (p) guardarDeseos(p); }
+  });
+  document.addEventListener('change', e => {
+    const w = e.target.dataset && e.target.dataset.fw; if (!w) return;
+    const ctx = ctxDe(e.target); if (!ctx) return;
+    if (e.target.checked) { if (ctx.sel.length < ctx.N) ctx.sel.push(w); }
+    else ctx.sel = ctx.sel.filter(x => x !== w);
+    ctx.swap = {}; repintar(ctx);
+  });
 
   // ---- Inventario: los toques se juntan y se mandan en un solo envío ----
   let pendientes = {};      // clave → {deseo, color, delta} aún sin enviar
@@ -594,23 +796,11 @@
   document.getElementById('paq').addEventListener('click', e => {
     const b = e.target.closest('button[data-acc]'); if (!b) return;
     const id = b.dataset.id;
-    if (b.dataset.acc === 'abrir') { abierto = abierto === id ? null : id; confirmId = null; form = null; pintar(D); return; }
-    if (b.dataset.acc === 'fcolor') { form.color = b.dataset.c; form.swap = {}; pintar(D); return; }
-    if (b.dataset.acc === 'fdd') { form.lista = !form.lista; pintar(D); return; }
-    if (b.dataset.acc === 'fswap') { form.swap[b.dataset.i] = !form.swap[b.dataset.i]; pintar(D); return; }
-    if (b.dataset.acc === 'fguardar') { const p = D.paquetes.find(x => x.id === id); if (p) guardarDeseos(p); return; }
+    if (b.dataset.acc === 'abrir') { abierto = abierto === id ? null : id; confirmId = null; forms.sin = null; pintar(D); return; }
     if (b.dataset.acc === 'armar') { if (b.dataset.falta === '1') { confirmId = id; pintar(D); } else armar(id); }
     else if (b.dataset.acc === 'armarYa') armar(id);
     else if (b.dataset.acc === 'cancelar') { confirmId = null; pintar(D); }
     else if (b.dataset.acc === 'desarmar') desarmar(id);
-  });
-
-  document.getElementById('paq').addEventListener('change', e => {
-    const w = e.target.dataset && e.target.dataset.fw; if (!w || !form) return;
-    const p = D.paquetes.find(x => x.id === form.id); if (!p) return;
-    if (e.target.checked) { if (form.sel.length < p.tamano) form.sel.push(w); }
-    else form.sel = form.sel.filter(x => x !== w);
-    form.swap = {}; pintar(D);
   });
 
   const inpB = document.getElementById('buscar');
@@ -626,6 +816,7 @@
     ['nV','nP'].forEach(id => { const on = (id === 'nV') === (v === 'V');
       if (on) document.getElementById(id).setAttribute('aria-current', 'page'); else document.getElementById(id).removeAttribute('aria-current'); });
     document.getElementById('titulo').textContent = v === 'V' ? 'Velas' : 'Paquetes';
+    document.getElementById('fab').hidden = v !== 'P';
     soltarFijos(); pintar(D);
     window.scrollTo(0, 0);
   }
