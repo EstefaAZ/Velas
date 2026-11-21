@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Velas de deseos</title>
-<meta name="app-version" content="2026-11-21-boton-armar">
+<meta name="app-version" content="2026-11-21-entregado">
 <meta name="theme-color" content="#f6f3ee">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3/dist/tabler-icons.min.css">
 <style>
@@ -266,6 +266,11 @@
   .det .btn-armar{width:auto;min-height:40px;margin:2px 0 0 auto;padding:0 16px;font-size:14px;border:1.5px solid var(--cafe);background:#fff;color:var(--cafe)}
   .det .btn-armar.igual{border-color:var(--line2);color:var(--txt)}
   @media (hover:hover) and (pointer:fine){ .det .btn-armar:hover{background:#fbf3e6} }
+  .stt .ent{color:var(--txt2);display:flex;align-items:center;gap:4px}
+  .armado-el{flex-wrap:wrap;gap:8px}
+  .acc-r{display:flex;gap:8px;margin-left:auto}
+  .armado-el > .btn{margin-left:auto}
+  .acc-r .btn{margin:0}
 </style>
 </head>
 <body>
@@ -414,7 +419,9 @@
   function aviso(t, accion, fn) { avisoRico({ titulo: t, accion, fn }); }
   function avisoRico(o) {
     if (o.ver && !o.accion) { o.accion = 'Ver'; o.fn = () => verPaquete(o.ver); }
-    colaAvisos.push(o); if (!avisoActivo) siguienteAviso();
+    colaAvisos.push(o);
+    if (!avisoActivo) siguienteAviso();
+    else { const el = document.getElementById('toast'); clearTimeout(el._t); el._t = setTimeout(el._cerrar, 1200); }   // si llega otro, el actual se acorta
   }
   function siguienteAviso() {
     const o = colaAvisos.shift(); const el = document.getElementById('toast');
@@ -426,6 +433,7 @@
     const b = el.querySelector('button'); b.textContent = o.accion || '';
     const ic = el.querySelector('.t-ic'); ic.className = 't-ic ti ' + (o.tipo === 'ok' ? 'ti-circle-check' : o.tipo === 'listo' ? 'ti-gift' : 'ti-info-circle');
     const cerrar = () => { clearTimeout(el._t); el.classList.remove('show'); setTimeout(siguienteAviso, 220); };
+    el._cerrar = cerrar;
     b.onclick = () => { cerrar(); o.fn && o.fn(); };
     requestAnimationFrame(() => { el.classList.add('show'); document.body.classList.add('toast-on'); });
     el._t = setTimeout(cerrar, o.accion ? 6000 : 3500);
@@ -433,7 +441,7 @@
   function verPaquete(id) {
     const p = D.paquetes.find(x => x.id === id); if (!p) return;
     ir('P');
-    const t = p.estado === 'Armado' ? 'a' : p.estado === 'Esperando deseos' ? 's' : 'p';
+    const t = (p.estado === 'Armado' || p.estado === 'Entregado') ? 'a' : p.estado === 'Esperando deseos' ? 's' : 'p';
     const b = document.querySelector(`#seg button[data-t="${t}"]`); if (b) b.click();
     abierto = id; pintar(D);
     const r = document.querySelector(`.rh[data-id="${CSS.escape(id)}"]`); if (r) r.scrollIntoView({ block: 'center', behavior: 'smooth' });
@@ -518,7 +526,7 @@
     document.getElementById('mV').textContent = fv;
 
     // Paquetes: pestañas Por armar / Sin deseos / Armados
-    const tabDe = p => p.estado === 'Armado' ? 'a' : p.estado === 'Esperando deseos' ? 's' : 'p';
+    const tabDe = p => (p.estado === 'Armado' || p.estado === 'Entregado') ? 'a' : p.estado === 'Esperando deseos' ? 's' : 'p';
     const enTab = p => (p.id in fijos ? fijos[p.id].tab : tabDe(p));
     ['p','s','a'].forEach(t => document.getElementById('nT' + t).textContent = D.paquetes.filter(p => tabDe(p) === t).length);
     const lista = D.paquetes.filter(p => (!busqueda || norm(p.persona).includes(busqueda)) && enTab(p) === pestana);
@@ -528,6 +536,12 @@
       const L = lista.filter(p => grupo(p) === 0), F = lista.filter(p => grupo(p) === 1);
       if (L.length) html += `<div class="lbl">Listos · ${L.length}</div><div class="lista">${L.map(p => fila(p, st)).join('')}</div>`;
       if (F.length) html += `<div class="lbl">Les faltan velas · ${F.length}</div><div class="lista">${F.map(p => fila(p, st)).join('')}</div>`;
+    } else if (pestana === 'a') {
+      // Armados: primero los que faltan por entregar, luego los entregados
+      const grupoA = p => p.id in fijos ? fijos[p.id].r : (p.estado === 'Entregado' ? 1 : 0);
+      const PE = lista.filter(p => grupoA(p) === 0), EN = lista.filter(p => grupoA(p) === 1);
+      if (PE.length) html += `<div class="lbl">Por entregar · ${PE.length}</div><div class="lista">${PE.map(p => fila(p, st)).join('')}</div>`;
+      if (EN.length) html += `<div class="lbl">Entregados · ${EN.length}</div><div class="lista">${EN.map(p => fila(p, st)).join('')}</div>`;
     } else if (lista.length) html = `<div class="lista">${lista.map(p => fila(p, st)).join('')}</div>`;
     // Recordatorio de previstas en la pestaña Sin deseos
     const totPrev = (D.previstas || []).reduce((a, r) => a + r.cantidad, 0);
@@ -575,12 +589,13 @@
   function fila(p, st) {
     const varios = !/^1 de 1$/.test(String(p.numero).trim());
     const sub = [varios ? 'Paquete ' + esc(p.numero) : '', esc(p.color)].filter(Boolean).join(' · ');
-    const esp = p.estado === 'Esperando deseos', arm = p.estado === 'Armado';
+    const esp = p.estado === 'Esperando deseos', ent = p.estado === 'Entregado', arm = p.estado === 'Armado' || ent;
     const vs = esp ? [] : velasDe(p), nf = vs.filter(v => v.falta).length;
     const velitas = esp
       ? Array.from({ length: p.tamano || 0 }, () => '<span class="g"></span>').join('')
       : vs.map(v => `<span class="${v.falta ? 'm' : ''}" style="background:${COLOR_VELA[v.c.color]}"></span>`).join('');
-    const estadoTxt = arm ? '<span class="ok"><i class="ti ti-check" aria-hidden="true"></i>Armado</span>'
+    const estadoTxt = ent ? '<span class="ent"><i class="ti ti-gift" aria-hidden="true"></i>Entregado</span>'
+      : arm ? '<span class="ok"><i class="ti ti-check" aria-hidden="true"></i>Armado</span>'
       : esp ? `<span class="g">Escribir deseos</span>`
       : nf ? `<span class="f">Faltan ${nf}</span>` : '<span class="ok"><i class="ti ti-circle-check" aria-hidden="true"></i>Listo</span>';
     const abre = abierto === p.id;
@@ -604,7 +619,8 @@
     const COLTXT = { rojo:'roja', verde:'verde', rosado:'rosada' };
     const sinInv = (p.sinInventario || []).map(x => `${esc(x.deseo)} ${COLTXT[norm(x.color)] || esc(x.color)}`);
     const avisoSinInv = arm && sinInv.length ? `<div class="aviso">Se armó sin que estas velas estuvieran en el inventario: ${sinInv.join(', ')}.</div>` : '';
-    if (arm) acc = avisoSinInv + `<div class="armado-el"><span>Armado el ${esc(p.fecha)}</span><button class="btn link" data-acc="desarmar" data-id="${esc(p.id)}">Deshacer armado</button></div>`;
+    if (ent) acc = avisoSinInv + `<div class="armado-el"><span>Armado el ${esc(p.fecha)} · entregado el ${esc(p.fechaEntrega || '')}</span><button class="btn link" data-acc="desentregar" data-id="${esc(p.id)}">Deshacer entrega</button></div>`;
+    else if (arm) acc = avisoSinInv + `<div class="armado-el"><span>Armado el ${esc(p.fecha)}</span><div class="acc-r"><button class="btn link" data-acc="desarmar" data-id="${esc(p.id)}">Deshacer</button><button class="btn btn-armar" data-acc="entregar" data-id="${esc(p.id)}">Entregado</button></div></div>`;
     else if (confirmId === p.id) acc = `<div class="confirma">Le faltan ${nf} velas en el inventario. ¿Lo marcas como armado igual?
         <div class="acc"><button class="btn" data-acc="cancelar">Cancelar</button><button class="btn main" data-acc="armarYa" data-id="${esc(p.id)}">Sí, armar</button></div></div>`;
     else if (nf) acc = `<button class="btn btn-armar igual" data-acc="armar" data-id="${esc(p.id)}" data-falta="1">Armar igual</button>`;
@@ -872,7 +888,21 @@
   function nombre(id) { const p = D.paquetes.find(x => x.id === id); return p ? p.persona : 'Paquete'; }
   // La fila que acabas de armar o deshacer se queda en su pestaña y grupo hasta que cambies de pestaña o busques
   function fijar(id) { const p = D.paquetes.find(x => x.id === id); if (!p || id in fijos) return;
-    fijos[id] = { tab: pestana, r: faltan(p) ? 1 : 0 }; }
+    fijos[id] = { tab: pestana, r: pestana === 'a' ? (p.estado === 'Entregado' ? 1 : 0) : (faltan(p) ? 1 : 0) }; }
+
+  async function entregar(id) {
+    fijar(id);
+    await enviarCambios();
+    ocupado(true);
+    api('entregar', { id }).then(d => { ocupado(false); recibir(d);
+      avisoRico({ titulo: `${nombre(id)}: entregado`, detalle: 'El paquete ya está en manos de quien lo compró', tipo: 'ok', accion: 'Deshacer', fn: () => desentregar(id) }); }).catch(error);
+  }
+  async function desentregar(id) {
+    fijar(id);
+    await enviarCambios();
+    ocupado(true);
+    api('desentregar', { id }).then(d => { ocupado(false); recibir(d); aviso('Entrega deshecha. El paquete volvió a Por entregar.'); }).catch(error);
+  }
 
   async function armar(id) {
     confirmId = null; fijar(id);
@@ -896,6 +926,8 @@
     else if (b.dataset.acc === 'armarYa') armar(id);
     else if (b.dataset.acc === 'cancelar') { confirmId = null; pintar(D); }
     else if (b.dataset.acc === 'desarmar') desarmar(id);
+    else if (b.dataset.acc === 'entregar') entregar(id);
+    else if (b.dataset.acc === 'desentregar') desentregar(id);
   });
 
   const inpB = document.getElementById('buscar');
