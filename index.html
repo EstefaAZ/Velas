@@ -14,7 +14,7 @@
     --rojo:#c0392b; --rojo-bg:#fbeaea; --verde:#3b7a17; --verde-bg:#eaf3de;
     --rosa:#b03a68; --acc:#1f6fb2; --acc-bg:#e6f1fb; --warn:#8a5a00; --warn-bg:#fdf1d6;
     --ok:#2f7a33; --ok-bg:#e5f3e6; --cafe:#7a4e2d; --amb:#e8a33a;
-    --ease-out:cubic-bezier(0.23,1,0.32,1);
+    --ease-out:cubic-bezier(0.23,1,0.32,1); --rojo-v:#e05a4b; --verde-v:#6fae3f;
   }
   *{box-sizing:border-box}
   html{overscroll-behavior-y:none}
@@ -101,14 +101,53 @@
   /* Hoja inferior */
   .sheet{position:fixed;inset:0;z-index:40}
   .sheet[hidden]{display:none}
-  .sheet-fondo{position:absolute;inset:0;background:rgba(43,38,34,.4);opacity:0;transition:opacity 250ms ease}
+  .sheet-fondo{position:absolute;inset:0;background:rgba(30,24,20,.62);opacity:0;transition:opacity 250ms ease}
   .sheet.open .sheet-fondo{opacity:1}
-  .sheet-panel{position:absolute;left:0;right:0;bottom:0;margin:0 auto;max-width:560px;max-height:92dvh;overflow:auto;overscroll-behavior:contain;background:var(--bg);border-radius:20px 20px 0 0;padding:8px 16px calc(18px + env(safe-area-inset-bottom,0px));transform:translateY(100%);transition:transform 300ms cubic-bezier(0.32,0.72,0,1)}
+  .sheet-panel{position:absolute;left:0;right:0;bottom:0;margin:0 auto;max-width:560px;max-height:92dvh;overflow:auto;overscroll-behavior:contain;background:#fff;border-radius:22px 22px 0 0;padding:0;transform:translateY(100%);transition:transform 300ms cubic-bezier(0.32,0.72,0,1)}
   .sheet.open .sheet-panel{transform:none}
-  .sheet-asa{width:40px;height:5px;border-radius:3px;background:#d9cfc2;margin:4px auto 8px}
+  .sheet-hdr{background:var(--cafe);color:#fff;padding:10px 18px 16px;position:sticky;top:0;z-index:2}
+  .sheet-asa{width:40px;height:5px;border-radius:3px;background:rgba(255,255,255,.4);margin:0 auto 8px}
   .sheet-top{display:flex;justify-content:space-between;align-items:center}
-  .sheet-top h2{font-size:19px;margin:0;font-weight:600}
-  .sheet-top .btn{width:auto;margin:0}
+  .sheet-top h2{font-size:20px;margin:0;font-weight:600;color:#fff}
+  .sheet-x{border:none;background:none;color:#f3dcb8;font-size:15px;height:44px;padding:0 4px;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+  .n-prev{margin-top:10px;background:rgba(255,255,255,.1);border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:14px}
+  .n-vel{display:flex;gap:5px;align-items:flex-end;height:40px;min-width:91px}
+  .n-vel span{width:11px;height:32px;border-radius:3px 3px 4px 4px;position:relative;flex-shrink:0;transition:background 200ms var(--ease-out)}
+  .n-vel span::before{content:"";position:absolute;left:50%;top:-7px;width:2px;height:6px;background:#f3dcb8;transform:translateX(-50%);border-radius:1px}
+  .n-vel span.e{background:transparent;border:1.5px dashed rgba(255,255,255,.55)}
+  .n-pt{min-width:0;font-size:13px;color:#f3dcb8;line-height:1.4}
+  .n-pt b{display:block;color:#fff;font-weight:600;font-size:15px;overflow-wrap:anywhere}
+  .sheet-body{padding:14px 18px calc(20px + env(safe-area-inset-bottom,0px))}
+  .n-lbl{font-weight:600;margin-top:18px}
+  .sheet-body label.n-lbl{margin-top:2px}
+  .sheet .in{border-width:1.5px;height:50px}
+  .sheet .in:focus{outline:none;border-color:var(--cafe);box-shadow:0 0 0 3px rgba(122,78,45,.15)}
+  .n-opts{display:grid;gap:8px}
+  .n-o2{grid-template-columns:1fr 1fr} .n-o3{grid-template-columns:repeat(3,1fr)}
+  .n-opt{border:1.5px solid var(--line2);background:#fff;border-radius:14px;min-height:68px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;font-size:13px;color:var(--txt2);padding:8px 4px;cursor:pointer;transition:transform 120ms var(--ease-out),border-color 150ms,background 150ms}
+  .n-opt:active{transform:scale(.97)}
+  .n-opt.on{border-color:var(--cafe);background:#fbf3e6;color:var(--txt);font-weight:600}
+  .n-sw{width:26px;height:26px;border-radius:50%}
+  .n-mini{display:flex;gap:3px;align-items:flex-end;height:18px}
+  .n-mini i{width:5px;height:16px;border-radius:2px;background:#cdbba3;display:block}
+  .n-opt.on .n-mini i{background:var(--cafe)}
+  .n-stp{height:56px;border-width:1.5px;border-radius:14px;padding:0 6px}
+  .n-stp button{width:44px;height:44px;background:#fbf3e6;color:var(--cafe);border-radius:12px;font-size:20px}
+  .n-stp button:disabled{opacity:.4;cursor:default}
+  .n-stp span{font-size:20px}
+  .n-tg{width:100%;display:flex;align-items:center;justify-content:space-between;margin-top:18px;min-height:48px;border:none;background:none;padding:0;font-size:16px;color:var(--txt);font-weight:600;cursor:pointer;font-family:inherit}
+  .n-sw2{width:50px;height:30px;border-radius:15px;background:#d9cfc2;position:relative;transition:background 180ms ease;flex-shrink:0}
+  .n-sw2::after{content:"";position:absolute;left:3px;top:3px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.2);transition:transform 180ms var(--ease-out)}
+  .n-tg[aria-checked="true"] .n-sw2{background:var(--cafe)}
+  .n-tg[aria-checked="true"] .n-sw2::after{transform:translateX(20px)}
+  .n-tg + .f-lbl{display:none}
+  .sheet .f-dd{border-width:1.5px;margin-top:10px}
+  .n-go{height:52px;font-size:16px;font-weight:600;border-radius:14px;margin-top:18px!important}
+  @media (min-width:700px){
+    .sheet-panel{top:50%;bottom:auto;max-height:88vh;border-radius:22px;overflow:auto;transform:translateY(-46%) scale(.98);opacity:0;transition:transform 260ms var(--ease-out),opacity 200ms ease;width:min(520px,92vw)}
+    .sheet.open .sheet-panel{transform:translateY(-50%);opacity:1}
+    .sheet-hdr{border-radius:22px 22px 0 0} .sheet-asa{display:none}
+  }
   .in{width:100%;height:48px;border-radius:12px;border:1px solid var(--line2);padding:0 14px;font-size:16px;color:var(--txt);background:#fff;font-family:inherit}
   .in:focus{outline:2px solid var(--acc);outline-offset:1px}
   .g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -116,11 +155,9 @@
   .stp{display:flex;align-items:center;justify-content:space-between;border:1px solid var(--line2);border-radius:12px;height:46px;padding:0 3px;background:#fff}
   .stp button{width:40px;height:38px;border:none;background:#f1ece4;border-radius:9px;font-size:19px;color:var(--txt);cursor:pointer}
   .stp span{font-size:17px;font-weight:600;font-variant-numeric:tabular-nums}
-  .n-res{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-top:16px;font-size:14px;line-height:1.5}
-  .n-res b{font-weight:600} .n-res span{color:var(--txt2);font-size:13px}
-  #nGuardar{margin-top:12px}
   body.sin-scroll{overflow:hidden}
   @media (prefers-reduced-motion: reduce){ .sheet-panel{transform:none!important;opacity:0;transition:opacity 200ms} .sheet.open .sheet-panel{opacity:1} .toast{transform:translate(-50%,0)!important} body.toast-on .fab{transform:none} }
+  @media (prefers-reduced-motion: reduce) and (min-width:700px){ .sheet-panel{transform:translateY(-50%)!important} }
   .buscar{position:relative;margin-bottom:10px}
   .buscar input{width:100%;height:44px;border-radius:12px;border:1px solid var(--line2);background:#fff;padding:0 40px 0 38px;font-size:16px;color:var(--txt);font-family:inherit}
   .buscar input:focus{outline:2px solid var(--acc);outline-offset:1px}
@@ -215,16 +252,20 @@
 <div class="sheet" id="sheet" hidden>
   <div class="sheet-fondo" data-cerrar></div>
   <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="nTit">
-    <div class="sheet-asa" aria-hidden="true"></div>
-    <div class="sheet-top"><h2 id="nTit">Nuevo paquete</h2><button type="button" class="btn link" data-cerrar>Cancelar</button></div>
-    <div data-form="nuevo">
-      <label class="f-lbl" for="nNombre">Nombre de quien compró</label>
-      <input id="nNombre" class="in" type="text" placeholder="Carolina" autocomplete="off" autocapitalize="words" enterkeyhint="done">
-      <div id="nDyn"></div>
+    <div class="sheet-hdr">
+      <div class="sheet-asa" aria-hidden="true"></div>
+      <div class="sheet-top"><h2 id="nTit">Nuevo paquete</h2><button type="button" class="sheet-x" data-cerrar>Cancelar</button></div>
+      <div class="n-prev" aria-live="polite"><div class="n-vel" id="nVel" aria-hidden="true"></div><div class="n-pt"><b id="nPt1"></b><span id="nPt2"></span></div></div>
     </div>
-    <div class="n-res" id="nRes"></div>
-    <button type="button" class="btn main" id="nGuardar" disabled><i class="ti ti-plus" aria-hidden="true"></i> Agregar paquete</button>
-    <div class="f-hint" id="nHint"></div>
+    <div class="sheet-body">
+      <div data-form="nuevo">
+        <label class="f-lbl n-lbl" for="nNombre">¿Quién compró?</label>
+        <input id="nNombre" class="in" type="text" placeholder="Nombre comprador" autocomplete="off" autocapitalize="words" enterkeyhint="done">
+        <div id="nDyn"></div>
+      </div>
+      <button type="button" class="btn main n-go" id="nGuardar" disabled><i class="ti ti-plus" aria-hidden="true"></i> Agregar paquete</button>
+      <div class="f-hint" id="nHint"></div>
+    </div>
   </div>
 </div>
 
@@ -639,21 +680,29 @@
     const sh = document.getElementById('sheet');
     sh.hidden = false; requestAnimationFrame(() => sh.classList.add('open'));
     document.body.classList.add('sin-scroll');
+    document.querySelector('main').setAttribute('inert', ''); document.querySelector('nav').setAttribute('inert', '');
     setTimeout(() => document.getElementById('nNombre').focus(), 250);
   }
   function cerrarNuevo() {
     const sh = document.getElementById('sheet'); sh.classList.remove('open');
     document.body.classList.remove('sin-scroll');
+    document.querySelector('main').removeAttribute('inert'); document.querySelector('nav').removeAttribute('inert');
     setTimeout(() => { sh.hidden = true; forms.nuevo = null; }, 260);
     document.getElementById('fab').focus();
   }
   function pintarNuevo() {
     const ctx = forms.nuevo; if (!ctx) return;
-    const segV = (acc, v, t, on) => `<button type="button" class="${on ? 'on' : ''}" data-acc="${acc}" data-v="${v}" aria-pressed="${on}">${t}</button>`;
-    let h = `<div class="g2"><div><div class="f-lbl">Velas por paquete</div><div class="seg seg2">${segV('ntam', 5, '5', ctx.N === 5)}${segV('ntam', 7, '7', ctx.N === 7)}</div></div>
-      <div><div class="f-lbl">Cuántos paquetes</div><div class="stp"><button type="button" data-acc="ncant" data-v="-1" aria-label="Un paquete menos">−</button><span aria-live="polite">${ctx.cant}</span><button type="button" data-acc="ncant" data-v="1" aria-label="Un paquete más">+</button></div></div></div>
-      <div class="f-lbl">Color del paquete</div><div class="seg f-seg">${segV('fcolorN','Mixto','Mixto',ctx.color==='Mixto')}${segV('fcolorN','Rojo','Todo rojo',ctx.color==='Rojo')}${segV('fcolorN','Verde','Todo verde',ctx.color==='Verde')}</div>
-      <div class="f-lbl">¿Ya sabes los deseos?</div><div class="seg seg2">${segV('nmodo','ya','Sí, ya los sé',ctx.modo==='ya')}${segV('nmodo','luego','Después',ctx.modo==='luego')}</div>`;
+    const mini = n => `<span class="n-mini" aria-hidden="true">${'<i></i>'.repeat(n)}</span>`;
+    const opt = (acc, v, on, cont, t) => `<button type="button" class="n-opt ${on ? 'on' : ''}" data-acc="${acc}" data-v="${v}" aria-pressed="${on}">${cont}<span>${t}</span></button>`;
+    const sw = bg => `<span class="n-sw" style="background:${bg}" aria-hidden="true"></span>`;
+    let h = `<div class="f-lbl n-lbl">Tamaño</div><div class="n-opts n-o2">${opt('ntam', 5, ctx.N === 5, mini(5), '5 velas')}${opt('ntam', 7, ctx.N === 7, mini(7), '7 velas')}</div>
+      <div class="f-lbl n-lbl">Color</div><div class="n-opts n-o3">
+        ${opt('fcolorN', 'Mixto', ctx.color === 'Mixto', sw('linear-gradient(90deg,var(--rojo) 50%,var(--verde) 50%)'), 'Mixto')}
+        ${opt('fcolorN', 'Rojo', ctx.color === 'Rojo', sw('var(--rojo)'), 'Todo rojo')}
+        ${opt('fcolorN', 'Verde', ctx.color === 'Verde', sw('var(--verde)'), 'Todo verde')}</div>
+      <div class="f-lbl n-lbl">Cuántos paquetes</div>
+      <div class="stp n-stp"><button type="button" data-acc="ncant" data-v="-1" aria-label="Un paquete menos" ${ctx.cant <= 1 ? 'disabled' : ''}>−</button><span aria-live="polite">${ctx.cant}</span><button type="button" data-acc="ncant" data-v="1" aria-label="Un paquete más">+</button></div>
+      <button type="button" class="n-tg" role="switch" aria-checked="${ctx.modo === 'ya'}" data-acc="nmodo" data-v="${ctx.modo === 'ya' ? 'luego' : 'ya'}"><span>Ya sé los deseos</span><span class="n-sw2" aria-hidden="true"></span></button>`;
     if (ctx.modo === 'ya') {
       h += deseosUI(ctx, false);
       if (ctx.cant > 1) h += `<div class="f-why">Los ${ctx.cant} paquetes llevan los mismos deseos; la app pone cada deseo en un color distinto en cada paquete.</div>`;
@@ -661,16 +710,27 @@
     document.getElementById('nDyn').innerHTML = h;
     resumenNuevo();
   }
+  // Vista previa del encabezado: las velitas se pintan a medida que eliges
   function resumenNuevo() {
     const ctx = forms.nuevo; if (!ctx) return;
     const nombre = document.getElementById('nNombre').value.trim();
     ctx.persona = nombre;
     const okDeseos = ctx.modo === 'luego' || ctx.sel.length === ctx.N;
+    const colorDe = c => c === 'R' ? 'var(--rojo-v)' : 'var(--verde-v)';
+    let velas = [];
+    if (ctx.modo === 'ya' && ctx.sel.length === ctx.N) velas = decidirColores(ctx).map(c => ({ c: colorDe(c) }));
+    else for (let i = 0; i < ctx.N; i++) {
+      const lleno = ctx.modo === 'luego' || i < ctx.sel.length;
+      const c = ctx.color === 'Rojo' ? 'R' : ctx.color === 'Verde' ? 'V' : (i % 2 ? 'V' : 'R');
+      velas.push({ c: lleno ? colorDe(c) : null });
+    }
+    document.getElementById('nVel').innerHTML = velas.map(v => v.c ? `<span style="background:${v.c}"></span>` : '<span class="e"></span>').join('');
     const pl = ctx.cant > 1;
-    document.getElementById('nRes').innerHTML = `Se agrega${pl ? 'n' : ''} <b>${ctx.cant} paquete${pl ? 's' : ''} de ${ctx.N} velas</b>${nombre ? ` para <b>${esc(nombre)}</b>` : ''} · ${ctx.color}${ctx.modo === 'ya' ? (okDeseos ? ' · con deseos' : ` · faltan ${ctx.N - ctx.sel.length} deseos`) : ' · deseos después'}.<br><span>Suma ${ctx.cant * ctx.N} velas al total.</span>`;
+    document.getElementById('nPt1').textContent = `${pl ? ctx.cant + ' paquetes' : 'Paquete'} de ${ctx.N} velas${nombre ? ' · ' + nombre : ''}`;
+    document.getElementById('nPt2').textContent = `${({ Mixto: 'Mixto', Rojo: 'Todo rojo', Verde: 'Todo verde' })[ctx.color]} · ${ctx.modo === 'luego' ? 'deseos después' : okDeseos ? 'deseos completos' : `${ctx.sel.length} de ${ctx.N} deseos`}${pl ? ` · ${ctx.cant * ctx.N} velas` : ''}`;
     const btn = document.getElementById('nGuardar');
     btn.disabled = !nombre || !okDeseos;
-    document.getElementById('nHint').textContent = !nombre ? 'Escribe el nombre de quien compró' : !okDeseos ? `Elige ${ctx.N - ctx.sel.length} deseos más` : '';
+    document.getElementById('nHint').textContent = !nombre ? 'Escribe el nombre del comprador' : !okDeseos ? `Elige ${ctx.N - ctx.sel.length} deseos más` : '';
   }
   async function guardarNuevo() {
     const ctx = forms.nuevo; if (!ctx) return;
@@ -702,7 +762,17 @@
   document.getElementById('nNombre').addEventListener('input', resumenNuevo);
   document.getElementById('nGuardar').addEventListener('click', guardarNuevo);
   document.getElementById('sheet').addEventListener('click', e => { if (e.target.closest('[data-cerrar]')) cerrarNuevo(); });
-  document.addEventListener('keydown', e => { if (e.key === 'Escape' && forms.nuevo) cerrarNuevo(); });
+  document.addEventListener('keydown', e => {
+    if (!forms.nuevo) return;
+    if (e.key === 'Escape') { cerrarNuevo(); return; }
+    if (e.key === 'Tab') {   // el foco no sale de la hoja mientras está abierta
+      const f = [...document.querySelectorAll('.sheet-panel button:not([disabled]), .sheet-panel input:not([disabled])')].filter(x => x.offsetParent !== null);
+      if (!f.length) return;
+      const i = f.indexOf(document.activeElement);
+      if (e.shiftKey && (i <= 0)) { e.preventDefault(); f[f.length - 1].focus(); }
+      else if (!e.shiftKey && (i === -1 || i === f.length - 1)) { e.preventDefault(); f[0].focus(); }
+    }
+  });
 
   // Acciones compartidas del selector de deseos (Sin deseos y Nuevo paquete)
   function ctxDe(el) { const f = el.closest('[data-form]'); return f ? forms[f.dataset.form] : null; }
