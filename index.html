@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Velas de deseos</title>
-<meta name="app-version" content="2026-11-21-editar-pagado">
+<meta name="app-version" content="2026-11-21-turnos-color">
 <meta name="theme-color" content="#f6f3ee">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3/dist/tabler-icons.min.css">
 <style>
@@ -688,6 +688,11 @@
       D.paquetes.filter(q => q.id !== ctx.excluir && norm(q.persona) === norm(ctx.persona || '')).forEach(q => {
         q.rojas.forEach(d => hermanos[norm(d)] = 'R'); q.verdes.forEach(d => hermanos[norm(d)] = 'V');
       });
+      // Turnos: si hay más mixtos con mayoría verde, este lleva mayoría roja (y al revés), para que quede parejo
+      let mayR = 0, mayV = 0;
+      D.paquetes.filter(q => q.id !== ctx.excluir && q.color === 'Mixto' && q.rojas.length !== q.verdes.length)
+        .forEach(q => q.rojas.length > q.verdes.length ? mayR++ : mayV++);
+      const turno = mayR < mayV ? 'R' : mayV < mayR ? 'V' : (Math.random() < 0.5 ? 'R' : 'V');
       let mejor = 0, mejorPts = -1e9;
       const tamR = [Math.floor(n / 2), Math.ceil(n / 2)];
       for (let mask = 0; mask < (1 << n); mask++) {
@@ -699,8 +704,9 @@
           usa[k] = (usa[k] || 0) + 1;
           if ((sobrante[k] || 0) >= usa[k]) pts += 3;
           const h = hermanos[norm(w)]; if (h) pts += h !== c ? 5 : -5;
-          pts -= j * 0.001 * (c === 'R' ? 1 : -1);
+          pts += j * 0.0001 * (mask % 7);                         // desempate neutral (no favorece ningún color)
         }
+        if (n % 2) pts += (turno === 'R' ? nr > n / 2 : nr < n / 2) ? 1 : 0;   // a quién le toca la mayoría
         if (pts > mejorPts) { mejorPts = pts; mejor = mask; }
       }
       idx.forEach((i, j) => res[i] = (mejor & (1 << j)) ? 'R' : 'V');
