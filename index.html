@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Velas de deseos</title>
-<meta name="app-version" content="2026-11-21-instrucciones">
+<meta name="app-version" content="2026-11-21-instrucciones-2">
 <meta name="theme-color" content="#f6f3ee">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3/dist/tabler-icons.min.css">
 <style>
@@ -551,7 +551,7 @@
     if (pestana === 's' && totPrev && !busqueda)
       html = `<div class="nota-prev"><i class="ti ti-info-circle" aria-hidden="true"></i><div><p>Estas personas aún no eligen deseos, pero ya contamos <b>${totPrev} velas previstas</b> para ellas. Cuando te digan sus deseos:</p>
         <ol><li>Toca su nombre.</li><li>Elige el color del paquete, si aún no lo tiene.</li><li>Marca sus deseos y toca <b>Guardar deseos</b>.</li></ol>
-        <p>La app reparte los colores de las velas y ajusta las previstas sola.</p></div></div>` + html;
+        <p>Y listo: la app se encarga del resto.</p></div></div>` + html;
     document.getElementById('paq').innerHTML = html || `<div class="vacio">${busqueda ? 'Nadie con ese nombre.' :
       pestana === 'p' ? 'No hay paquetes por armar.' : pestana === 's' ? 'Todos ya eligieron sus deseos.' : 'Todavía no hay paquetes armados.'}</div>`;
   }
