@@ -141,6 +141,31 @@
   .nota-prev{display:flex;gap:10px;align-items:flex-start;background:var(--warn-bg);color:var(--warn);border-radius:12px;padding:10px 12px;font-size:13px;line-height:1.45;margin-bottom:10px}
   .nota-prev i{font-size:18px;margin-top:1px}
   .nota-prev b{font-weight:600}
+  .f-lbl{font-size:13px;color:var(--txt2);margin:14px 0 8px}
+  .f-lbl:first-child{margin-top:2px}
+  .f-seg{margin-bottom:0}
+  .f-dd{border:1px solid var(--line2);border-radius:12px;overflow:hidden;background:#fff}
+  .f-dd-btn{width:100%;min-height:50px;border:none;background:#fff;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;font-size:16px;color:var(--txt);text-align:left;cursor:pointer}
+  .f-dd-btn:active{transform:none;background:#faf7f2}
+  .f-dd-btn i{font-size:18px;color:var(--txt2);transition:transform 200ms var(--ease-out)}
+  .f-dd.open .f-dd-btn i{transform:rotate(180deg)}
+  .f-ph{color:var(--muted)}
+  .f-opts{border-top:1px solid var(--line)}
+  .f-op{display:flex;align-items:center;gap:12px;min-height:46px;padding:0 14px;font-size:16px;color:var(--txt);border-bottom:1px solid #f1ece4;cursor:pointer}
+  .f-op input{width:20px;height:20px;accent-color:var(--cafe);margin:0}
+  .f-op.off{color:#bdb4a7;cursor:default}
+  .f-cnt{display:flex;justify-content:space-between;align-items:center;padding:8px 14px;background:#faf7f2;font-size:13px;color:var(--txt2)}
+  .f-cnt b{color:var(--txt);font-weight:600}
+  .f-cnt button{border:none;background:var(--cafe);color:#fff;border-radius:8px;height:36px;padding:0 16px;font-size:14px;cursor:pointer}
+  .f-prev{display:grid;grid-template-columns:1fr 1fr;gap:10px;background:#faf7f2;border:1px solid var(--line);border-radius:12px;padding:12px}
+  .f-prev h4{margin:0 0 6px;font-size:13px;font-weight:600;color:var(--txt2);display:flex;align-items:center;gap:6px}
+  .f-prev ul{margin:0;padding:0}.f-prev li{list-style:none;padding:2px 0;font-size:15px}
+  .f-prev li button{border:none;background:none;padding:4px 0;font-size:15px;color:var(--txt);text-decoration:underline dotted;text-underline-offset:3px;text-align:left;cursor:pointer}
+  .f-vac{color:var(--muted)}
+  .f-why{font-size:13px;color:var(--txt2);margin-top:8px;line-height:1.45}
+  .det .f-why + .btn, .det .f-dd + .btn{margin-top:14px}
+  .f-hint{font-size:13px;color:var(--txt2);text-align:center;margin-top:8px}
+  .btn:disabled{background:#d9cfc2;border-color:#d9cfc2;cursor:default}
   .armado-el{font-size:12px;color:var(--txt2);display:flex;justify-content:space-between;align-items:center}
   @media (prefers-reduced-motion: reduce){ *{transition-property:opacity!important} button:active{transform:none!important} }
 </style>
@@ -360,7 +385,7 @@
   // Reparte el inventario entre los paquetes pendientes para que dos paquetes no "usen" la misma vela.
   // 1) En el orden de la hoja, a cada paquete que se puede completar con lo que queda se le apartan sus velas (Listo).
   // 2) A los demás se les reparte lo que sobra, en el mismo orden, y se marca lo que les falta.
-  let asignacion = {};
+  let asignacion = {}, sobrante = {};
   function asignar(st) {
     const disp = {}; Object.keys(st).forEach(k => disp[k] = st[k].n);
     const res = {}, pend = D.paquetes.filter(p => p.estado === 'Pendiente');
@@ -380,7 +405,7 @@
         return { d, c, falta: true, apartada: (st[k] ? st[k].n : 0) > 0 };   // hay en inventario pero ya está apartada
       }));
     });
-    asignacion = res;
+    asignacion = res; sobrante = disp;
   }
   function faltan(p) { return (asignacion[p.id] || []).filter(v => v.falta).length; }
   function velasDe(p) {
@@ -398,14 +423,15 @@
       ? Array.from({ length: p.tamano || 0 }, () => '<span class="g"></span>').join('')
       : vs.map(v => `<span class="${v.falta ? 'm' : ''}" style="background:${COLOR_VELA[v.c.color]}"></span>`).join('');
     const estadoTxt = arm ? '<span class="ok"><i class="ti ti-check" aria-hidden="true"></i>Armado</span>'
-      : esp ? `<span class="g">${p.tamano} velas</span>`
+      : esp ? `<span class="g">Escribir deseos</span>`
       : nf ? `<span class="f">Faltan ${nf}</span>` : '<span class="ok"><i class="ti ti-circle-check" aria-hidden="true"></i>Listo</span>';
-    const abre = !esp && abierto === p.id;
-    const cab = `<button class="rh" ${esp ? 'disabled style="cursor:default"' : `data-acc="abrir" data-id="${esc(p.id)}" aria-expanded="${abre}"`}>
+    const abre = abierto === p.id;
+    const cab = `<button class="rh" data-acc="abrir" data-id="${esc(p.id)}" aria-expanded="${abre}">
         <span class="vel" aria-hidden="true">${velitas}</span>
         <span class="who"><b>${esc(p.persona)}</b><small>${sub}</small></span>
-        <span class="stt">${estadoTxt}${esp ? '' : '<i class="ti ti-chevron-down chev" aria-hidden="true"></i>'}</span></button>`;
+        <span class="stt">${estadoTxt}<i class="ti ti-chevron-down chev" aria-hidden="true"></i></span></button>`;
     if (!abre) return `<div class="rw">${cab}</div>`;
+    if (esp) return `<div class="rw open">${cab}<div class="det">${formulario(p)}</div></div>`;
 
     const columna = (c, t) => { const l = vs.filter(v => v.c === c); return l.length ? `<div class="col"><h4><span class="dot" style="background:${COLOR_VELA[c.color]}"></span>${t}</h4><ul>${l.map(v => `<li class="${v.falta ? 'm' : ''}">${esc(v.d)}</li>`).join('')}</ul></div>` : ''; };
     const cols = [columna(COLS[0], 'Rojas'), columna(COLS[1], 'Verdes'), columna(COLS[2], 'Rosada')].filter(Boolean);
@@ -426,6 +452,76 @@
     else if (nf) acc = `<button class="btn" data-acc="armar" data-id="${esc(p.id)}" data-falta="1">Armar igual</button>`;
     else acc = `<button class="btn main" data-acc="armar" data-id="${esc(p.id)}" data-falta="0"><i class="ti ti-check" aria-hidden="true"></i> Marcar como armado</button>`;
     return `<div class="rw open">${cab}<div class="det"><div class="cols" style="grid-template-columns:repeat(${cols.length},minmax(0,1fr))">${cols.join('')}</div>${cuenta}${revisar}${apartadas}${acc}</div></div>`;
+  }
+
+  // ---- Escribir deseos desde la app: la app decide rojas y verdes ----
+  let form = null;   // {id, color, sel:[], swap:{}, lista:false}
+  function abrirForm(p) {
+    const c = ['Mixto', 'Rojo', 'Verde'].includes(p.color) ? p.color : 'Mixto';
+    form = { id: p.id, color: c, sel: [], swap: {}, lista: false };
+  }
+  // Reparte colores: mitad y mitad en mixtos; prefiere el color que ya hay hecho (sobrante del inventario)
+  // y, si la persona tiene otro paquete, pone cada deseo repetido en el color contrario.
+  function decidirColores(p) {
+    const sel = form.sel, n = sel.length;
+    if (form.color === 'Rojo') return sel.map(() => 'R');
+    if (form.color === 'Verde') return sel.map(() => 'V');
+    const hermanos = {};
+    D.paquetes.filter(q => q.id !== p.id && norm(q.persona) === norm(p.persona)).forEach(q => {
+      q.rojas.forEach(d => hermanos[norm(d)] = 'R'); q.verdes.forEach(d => hermanos[norm(d)] = 'V');
+    });
+    const disp = Object.assign({}, sobrante);
+    let mejor = null, mejorPts = -1e9;
+    const tamR = [Math.floor(n / 2), Math.ceil(n / 2)];
+    for (let mask = 0; mask < (1 << n); mask++) {
+      let nr = 0; for (let i = 0; i < n; i++) if (mask & (1 << i)) nr++;
+      if (!tamR.includes(nr)) continue;
+      let pts = 0; const usa = {};
+      for (let i = 0; i < n; i++) {
+        const c = (mask & (1 << i)) ? 'R' : 'V', k = key(sel[i], c === 'R' ? 'Rojo' : 'Verde');
+        usa[k] = (usa[k] || 0) + 1;
+        if ((disp[k] || 0) >= usa[k]) pts += 3;                    // ya está hecha
+        const h = hermanos[norm(sel[i])]; if (h) pts += h !== c ? 5 : -5;   // contrario al otro paquete
+        pts -= i * 0.001 * (c === 'R' ? 1 : -1);                    // desempate estable
+      }
+      if (pts > mejorPts) { mejorPts = pts; mejor = mask; }
+    }
+    const res = sel.map((_, i) => (mejor & (1 << i)) ? 'R' : 'V');
+    Object.keys(form.swap).forEach(i => { if (form.swap[i] && res[i]) res[i] = res[i] === 'R' ? 'V' : 'R'; });
+    return res;
+  }
+  function formulario(p) {
+    if (!form || form.id !== p.id) abrirForm(p);
+    const N = p.tamano, sel = form.sel, lleno = sel.length >= N;
+    const lista = [...new Set(D.deseos.length ? D.deseos : [])].sort((a, b) => a.localeCompare(b, 'es'));
+    const segBtn = (c, t) => `<button type="button" class="${form.color === c ? 'on' : ''}" data-acc="fcolor" data-c="${c}" aria-pressed="${form.color === c}">${t}</button>`;
+    let h = `<div class="f-lbl">Color del paquete</div><div class="seg f-seg">${segBtn('Mixto','Mixto')}${segBtn('Rojo','Todo rojo')}${segBtn('Verde','Todo verde')}</div>
+      <div class="f-lbl">Deseos que pidió</div>
+      <div class="f-dd ${form.lista ? 'open' : ''}"><button type="button" class="f-dd-btn" data-acc="fdd" aria-expanded="${form.lista}">
+        <span class="${sel.length ? '' : 'f-ph'}">${sel.length ? sel.map(esc).join(', ') : 'Elegir deseos…'}</span><i class="ti ti-chevron-down" aria-hidden="true"></i></button>`;
+    if (form.lista) h += `<div class="f-opts">${lista.map(w => { const on = sel.includes(w), off = lleno && !on;
+        return `<label class="f-op ${off ? 'off' : ''}"><input type="checkbox" data-fw="${esc(w)}" ${on ? 'checked' : ''} ${off ? 'disabled' : ''}>${esc(w)}</label>`; }).join('')}
+        <div class="f-cnt"><span><b>${sel.length} de ${N}</b> elegidos</span><button type="button" data-acc="fdd">Listo</button></div></div>`;
+    h += `</div>`;
+    if (sel.length === N) {
+      const c = decidirColores(p), L = k => sel.map((w, i) => [w, i]).filter(x => c[x[1]] === k);
+      const ul = k => `<ul>${L(k).map(([w, i]) => `<li>${form.color === 'Mixto' ? `<button type="button" data-acc="fswap" data-i="${i}">${esc(w)}</button>` : esc(w)}</li>`).join('') || '<li class="f-vac">—</li>'}</ul>`;
+      h += `<div class="f-lbl">Así quedan los colores</div><div class="f-prev"><div><h4><span class="dot" style="background:var(--rojo)"></span>Rojas</h4>${ul('R')}</div><div><h4><span class="dot" style="background:var(--verde)"></span>Verdes</h4>${ul('V')}</div></div>
+        <div class="f-why">${form.color === 'Mixto' ? 'Mitad y mitad, priorizando el color que ya tienes hecho' + (D.paquetes.some(q => q.id !== p.id && norm(q.persona) === norm(p.persona)) ? ' y poniendo en color contrario lo que se repite con su otro paquete' : '') + '. Toca un deseo para cambiarle el color.' : 'Todas las velas van en ' + (form.color === 'Rojo' ? 'rojo' : 'verde') + '.'}</div>`;
+    }
+    h += `<button type="button" class="btn main" data-acc="fguardar" data-id="${esc(p.id)}" ${sel.length === N ? '' : 'disabled'}>Guardar deseos</button>
+      ${sel.length === N ? '' : `<div class="f-hint">Elige ${N - sel.length} más</div>`}`;
+    return h;
+  }
+  async function guardarDeseos(p) {
+    const c = decidirColores(p);
+    const rojas = form.sel.filter((_, i) => c[i] === 'R'), verdes = form.sel.filter((_, i) => c[i] === 'V');
+    await enviarCambios();
+    ocupado(true);
+    api('guardarDeseos', { id: p.id, color: form.color, rojas, verdes }).then(d => {
+      ocupado(false); form = null; abierto = null; recibir(d);
+      aviso(`Deseos de ${p.persona} guardados`);
+    }).catch(error);
   }
 
   // ---- Inventario: los toques se juntan y se mandan en un solo envío ----
@@ -498,11 +594,23 @@
   document.getElementById('paq').addEventListener('click', e => {
     const b = e.target.closest('button[data-acc]'); if (!b) return;
     const id = b.dataset.id;
-    if (b.dataset.acc === 'abrir') { abierto = abierto === id ? null : id; confirmId = null; pintar(D); return; }
+    if (b.dataset.acc === 'abrir') { abierto = abierto === id ? null : id; confirmId = null; form = null; pintar(D); return; }
+    if (b.dataset.acc === 'fcolor') { form.color = b.dataset.c; form.swap = {}; pintar(D); return; }
+    if (b.dataset.acc === 'fdd') { form.lista = !form.lista; pintar(D); return; }
+    if (b.dataset.acc === 'fswap') { form.swap[b.dataset.i] = !form.swap[b.dataset.i]; pintar(D); return; }
+    if (b.dataset.acc === 'fguardar') { const p = D.paquetes.find(x => x.id === id); if (p) guardarDeseos(p); return; }
     if (b.dataset.acc === 'armar') { if (b.dataset.falta === '1') { confirmId = id; pintar(D); } else armar(id); }
     else if (b.dataset.acc === 'armarYa') armar(id);
     else if (b.dataset.acc === 'cancelar') { confirmId = null; pintar(D); }
     else if (b.dataset.acc === 'desarmar') desarmar(id);
+  });
+
+  document.getElementById('paq').addEventListener('change', e => {
+    const w = e.target.dataset && e.target.dataset.fw; if (!w || !form) return;
+    const p = D.paquetes.find(x => x.id === form.id); if (!p) return;
+    if (e.target.checked) { if (form.sel.length < p.tamano) form.sel.push(w); }
+    else form.sel = form.sel.filter(x => x !== w);
+    form.swap = {}; pintar(D);
   });
 
   const inpB = document.getElementById('buscar');
