@@ -138,6 +138,9 @@
   .det .btn{margin-top:0}
   .det .aviso{margin:0 0 10px}
   .det .confirma{margin-top:0}
+  .nota-prev{display:flex;gap:10px;align-items:flex-start;background:var(--warn-bg);color:var(--warn);border-radius:12px;padding:10px 12px;font-size:13px;line-height:1.45;margin-bottom:10px}
+  .nota-prev i{font-size:18px;margin-top:1px}
+  .nota-prev b{font-weight:600}
   .armado-el{font-size:12px;color:var(--txt2);display:flex;justify-content:space-between;align-items:center}
   @media (prefers-reduced-motion: reduce){ *{transition-property:opacity!important} button:active{transform:none!important} }
 </style>
@@ -343,6 +346,10 @@
       if (L.length) html += `<div class="lbl">Listos · ${L.length}</div><div class="lista">${L.map(p => fila(p, st)).join('')}</div>`;
       if (F.length) html += `<div class="lbl">Les faltan velas · ${F.length}</div><div class="lista">${F.map(p => fila(p, st)).join('')}</div>`;
     } else if (lista.length) html = `<div class="lista">${lista.map(p => fila(p, st)).join('')}</div>`;
+    // Recordatorio de previstas en la pestaña Sin deseos
+    const totPrev = (D.previstas || []).reduce((a, r) => a + r.cantidad, 0);
+    if (pestana === 's' && totPrev && !busqueda)
+      html = `<div class="nota-prev"><i class="ti ti-info-circle" aria-hidden="true"></i><span>Hay <b>${totPrev} velas previstas</b> para estas personas. Cuando lleguen sus deseos, escríbelos en la hoja Paquetes y baja esas cantidades en la pestaña <b>Previstas</b>, para no contarlas dos veces.</span></div>` + html;
     document.getElementById('paq').innerHTML = html || `<div class="vacio">${busqueda ? 'Nadie con ese nombre.' :
       pestana === 'p' ? 'No hay paquetes por armar.' : pestana === 's' ? 'Todos ya eligieron sus deseos.' : 'Todavía no hay paquetes armados.'}</div>`;
   }
@@ -410,7 +417,10 @@
     const raros = D.deseos.length ? [...new Set(vs.map(v => v.d).filter(d => !conocidos.has(norm(d))))] : [];
     const revisar = raros.length ? `<div class="aviso">Revisa en la hoja: ${raros.map(d => '"' + esc(d) + '"').join(', ')} no está en la lista de deseos.</div>` : '';
     let acc;
-    if (arm) acc = `<div class="armado-el"><span>Armado el ${esc(p.fecha)}</span><button class="btn link" data-acc="desarmar" data-id="${esc(p.id)}">Deshacer armado</button></div>`;
+    const COLTXT = { rojo:'roja', verde:'verde', rosado:'rosada' };
+    const sinInv = (p.sinInventario || []).map(x => `${esc(x.deseo)} ${COLTXT[norm(x.color)] || esc(x.color)}`);
+    const avisoSinInv = arm && sinInv.length ? `<div class="aviso">Se armó sin que estas velas estuvieran en el inventario: ${sinInv.join(', ')}.</div>` : '';
+    if (arm) acc = avisoSinInv + `<div class="armado-el"><span>Armado el ${esc(p.fecha)}</span><button class="btn link" data-acc="desarmar" data-id="${esc(p.id)}">Deshacer armado</button></div>`;
     else if (confirmId === p.id) acc = `<div class="confirma">Le faltan ${nf} velas en el inventario. ¿Lo marcas como armado igual?
         <div class="acc"><button class="btn" data-acc="cancelar">Cancelar</button><button class="btn main" data-acc="armarYa" data-id="${esc(p.id)}">Sí, armar</button></div></div>`;
     else if (nf) acc = `<button class="btn" data-acc="armar" data-id="${esc(p.id)}" data-falta="1">Armar igual</button>`;
