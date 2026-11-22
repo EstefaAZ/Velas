@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Velas de deseos</title>
-<meta name="app-version" content="2026-11-22-previstas-auto">
+<meta name="app-version" content="2026-11-22-armar-rapido">
 <meta name="theme-color" content="#f6f3ee">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3/dist/tabler-icons.min.css">
 <style>
@@ -300,6 +300,9 @@
   .reparto-link{display:flex;margin:16px auto 0;font-weight:500}
   .reparto-box{margin-top:16px}
   .reparto-box b{font-weight:600}
+  /* El botón + se aparta mientras hay un paquete abierto, para no tapar Marcar como armado */
+  .fab{transition:transform 220ms var(--ease-out),opacity 180ms ease}
+  body.fila-abierta .fab{opacity:0;pointer-events:none;transform:translateY(20px) scale(.9)}
 </style>
 </head>
 <body>
@@ -586,6 +589,7 @@
       html = `<div class="nota-prev"><i class="ti ti-info-circle" aria-hidden="true"></i><div><p>Estas personas aún no eligen deseos, pero ya contamos <b>${totPrev} velas previstas</b> para ellas. Cuando te digan sus deseos:</p>
         <ol><li>Toca su nombre.</li><li>Ajusta el tamaño o el color del paquete, si hace falta.</li><li>Marca sus deseos y toca <b>Guardar deseos</b>.</li></ol>
         <p>Y listo. La app se encarga del resto.</p></div></div>` + html;
+    document.body.classList.toggle('fila-abierta', abierto !== null);
     document.getElementById('paq').innerHTML = html || `<div class="vacio">${busqueda ? 'Nadie con ese nombre.' :
       pestana === 'p' ? 'No hay paquetes por armar.' : pestana === 's' ? 'Todos ya eligieron sus deseos.' : 'Todavía no hay paquetes armados.'}</div>`;
   }
@@ -1037,42 +1041,60 @@
   function fijar(id) { const p = D.paquetes.find(x => x.id === id); if (!p || id in fijos) return;
     fijos[id] = { tab: pestana, r: pestana === 'a' ? grupoArmado(p) : (faltan(p) ? 1 : 0) }; }
 
-  async function pagar(id) {
-    fijar(id); await enviarCambios(); ocupado(true);
-    api('pagar', { id }).then(d => { ocupado(false); recibir(d);
-      avisoRico({ titulo: `${nombre(id)}: pagado`, detalle: 'Paquete entregado y cobrado', tipo: 'ok', accion: 'Deshacer', fn: () => despagar(id) }); }).catch(error);
-  }
-  async function despagar(id) {
-    fijar(id); await enviarCambios(); ocupado(true);
-    api('despagar', { id }).then(d => { ocupado(false); recibir(d); aviso('Pago deshecho. El paquete volvió a Entregados sin pagar.'); }).catch(error);
-  }
 
-  async function entregar(id) {
-    fijar(id);
-    await enviarCambios();
-    ocupado(true);
-    api('entregar', { id }).then(d => { ocupado(false); recibir(d);
-      avisoRico({ titulo: `${nombre(id)}: entregado`, detalle: 'El paquete ya está en manos de quien lo compró', tipo: 'ok', accion: 'Deshacer', fn: () => desentregar(id) }); }).catch(error);
-  }
-  async function desentregar(id) {
-    fijar(id);
-    await enviarCambios();
-    ocupado(true);
-    api('desentregar', { id }).then(d => { ocupado(false); recibir(d); aviso('Entrega deshecha. El paquete volvió a Por entregar.'); }).catch(error);
-  }
 
-  async function armar(id) {
+
+
+
+
+
+
+
+  // ---- Acciones con respuesta inmediata: la pantalla cambia al tocar y luego se guarda en la hoja ----
+  const hoy = () => { const d = new Date(); return String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear(); };
+  const velasPaquete = p => COLS.flatMap(c => p[c.k].map(d => ({ d, color: c.color })));
+  function accionInmediata(id, accionApi, aplicar, avisoTras) {
+    const p = D.paquetes.find(x => x.id === id); if (!p) return;
     confirmId = null; fijar(id);
-    await enviarCambios();
-    ocupado(true);
-    api('armar', { id }).then(d => { ocupado(false); recibir(d);
-      aviso(`${nombre(id)}: armado`, 'Deshacer', () => desarmar(id)); }).catch(error);
+    const respaldo = JSON.parse(JSON.stringify(D));
+    aplicar(p); pintar(D);
+    if (avisoTras) avisoTras();
+    enviarCambios().then(() => { ocupado(true); return api(accionApi, { id }); })
+      .then(d => { ocupado(false); recibir(d); })
+      .catch(e => { ocupado(false); D = respaldo; pintar(D); error(e); });
   }
-  async function desarmar(id) {
-    fijar(id);
-    await enviarCambios();
-    ocupado(true);
-    api('desarmar', { id }).then(d => { ocupado(false); recibir(d); aviso('Armado deshecho. Las velas volvieron al inventario.'); }).catch(error);
+  function armar(id) {
+    accionInmediata(id, 'armar', p => {
+      p.sinInventario = [];
+      velasPaquete(p).forEach(v => { const k = key(v.d, v.color), r = D.inventario.find(x => key(x.deseo, x.color) === k);
+        if (r && r.hechas > 0) r.hechas--; else p.sinInventario.push({ deseo: v.d, color: v.color }); });
+      p.estado = 'Armado'; p.fecha = hoy();
+    }, () => aviso(`${nombre(id)}: armado`, 'Deshacer', () => desarmar(id)));
+  }
+  function desarmar(id) {
+    accionInmediata(id, 'desarmar', p => {
+      const sin = (p.sinInventario || []).map(x => key(x.deseo, x.color));
+      velasPaquete(p).forEach(v => { const k = key(v.d, v.color), j = sin.indexOf(k);
+        if (j >= 0) { sin.splice(j, 1); return; }
+        const r = D.inventario.find(x => key(x.deseo, x.color) === k); if (r) r.hechas++; else D.inventario.push({ deseo: v.d, color: v.color, hechas: 1 }); });
+      p.estado = 'Pendiente'; p.fecha = ''; p.sinInventario = [];
+    }, () => aviso('Armado deshecho. Las velas volvieron al inventario.'));
+  }
+  function entregar(id) {
+    accionInmediata(id, 'entregar', p => { p.estado = 'Entregado'; p.fechaEntrega = hoy(); },
+      () => avisoRico({ titulo: `${nombre(id)}: entregado`, detalle: 'El paquete ya está en manos de quien lo compró', tipo: 'ok', accion: 'Deshacer', fn: () => desentregar(id) }));
+  }
+  function desentregar(id) {
+    accionInmediata(id, 'desentregar', p => { p.estado = 'Armado'; p.fechaEntrega = ''; },
+      () => aviso('Entrega deshecha. El paquete volvió a Por entregar.'));
+  }
+  function pagar(id) {
+    accionInmediata(id, 'pagar', p => { p.fechaPago = hoy(); },
+      () => avisoRico({ titulo: `${nombre(id)}: pagado`, detalle: 'Paquete entregado y cobrado', tipo: 'ok', accion: 'Deshacer', fn: () => despagar(id) }));
+  }
+  function despagar(id) {
+    accionInmediata(id, 'despagar', p => { p.fechaPago = ''; },
+      () => aviso('Pago deshecho. El paquete volvió a Entregados sin pagar.'));
   }
 
   document.getElementById('paq').addEventListener('click', e => {
