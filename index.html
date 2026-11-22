@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Velas de deseos</title>
-<meta name="app-version" content="2026-11-21-reparto-mixtos">
+<meta name="app-version" content="2026-11-22-previstas-auto">
 <meta name="theme-color" content="#f6f3ee">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3/dist/tabler-icons.min.css">
 <style>
@@ -495,7 +495,13 @@
 
   function stockMap() { const m = {}; D.inventario.forEach(r => m[key(r.deseo, r.color)] = { deseo:r.deseo, color:r.color, n:r.hechas }); return m; }
   // Velas previstas: lo que creen que pedirán quienes aún no eligen deseos
-  function previstasMap() { const m = {}; (D.previstas || []).forEach(r => { const k = key(r.deseo, r.color); m[k] = (m[k] || 0) + r.cantidad; }); return m; }
+  // Las previstas solo cuentan mientras haya paquetes esperando deseos; cuando todos eligieron, ya no aplican
+  function previstasMap() {
+    const m = {};
+    if (!D.paquetes.some(p => p.estado === 'Esperando deseos')) return m;
+    (D.previstas || []).forEach(r => { const k = key(r.deseo, r.color); m[k] = (m[k] || 0) + r.cantidad; });
+    return m;
+  }
   function necesarioMap() {
     const m = previstasMap();
     D.paquetes.filter(p => p.estado === 'Pendiente').forEach(p =>
