@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Velas de deseos</title>
-<meta name="app-version" content="2026-11-22-armar-rapido">
+<meta name="app-version" content="2026-11-22-botones-tactiles">
 <meta name="theme-color" content="#f6f3ee">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3/dist/tabler-icons.min.css">
 <style>
@@ -303,6 +303,17 @@
   /* El botón + se aparta mientras hay un paquete abierto, para no tapar Marcar como armado */
   .fab{transition:transform 220ms var(--ease-out),opacity 180ms ease}
   body.fila-abierta .fab{opacity:0;pointer-events:none;transform:translateY(20px) scale(.9)}
+  /* Todos los botones con al menos 44px de alto para el dedo */
+  .seg button,.btn.link,.det .btn-armar,.det .btn-pagar,.f-cnt button,.toast button,.sheet-x{min-height:44px;height:auto}
+  .stp button,.n-stp button{width:44px;height:44px}
+  .stp,.n-stp{height:auto;min-height:52px}
+  .estado{min-height:44px;padding:0 2px}
+  .f-prev li button{min-height:40px}
+  .buscar button{width:44px;height:44px;top:0;right:0}
+  /* Indicador de "trabajando" en botones que esperan a Google */
+  .spin{width:16px;height:16px;border-radius:50%;border:2px solid currentColor;border-right-color:transparent;display:inline-block;animation:giro 700ms linear infinite;flex-shrink:0}
+  @keyframes giro{to{transform:rotate(360deg)}}
+  @media (prefers-reduced-motion: reduce){ .spin{animation-duration:1.6s} }
 </style>
 </head>
 <body>
@@ -765,24 +776,26 @@
     if (!repartoAbierto) return `<button class="btn link reparto-link" data-acc="reparto">Repartir de nuevo los colores de los mixtos</button>`;
     const total = D.paquetes.filter(p => p.estado === 'Pendiente' && p.color === 'Mixto' && (p.rojas.length + p.verdes.length) % 2).length;
     return `<div class="confirma reparto-box">La app va a alternar los paquetes <b>mixtos por armar</b>: uno con 4 rojas y 3 verdes, el siguiente con 3 rojas y 4 verdes, y así (en los de 5: 3 y 2). Cambian <b>${plan.length}</b> de ${total} paquetes. Los armados, entregados y pagados no se tocan.
-      <div class="acc"><button class="btn" data-acc="repartoNo">Cancelar</button><button class="btn main" data-acc="repartoSi">Sí, repartir</button></div></div>`;
+      <div class="acc"><button class="btn" data-acc="repartoNo" ${repartiendo ? 'disabled' : ''}>Cancelar</button><button class="btn main" data-acc="repartoSi" ${repartiendo ? 'disabled' : ''}>${repartiendo ? SPIN + 'Repartiendo…' : 'Sí, repartir'}</button></div></div>`;
   }
   async function aplicarReparto() {
+    if (repartiendo) return;
     const plan = planReparto(); if (!plan.length) return;
-    repartoAbierto = false;
+    repartiendo = true; pintar(D);
     await enviarCambios(); ocupado(true);
     api('reasignarColores', { items: plan.map(x => ({ id: x.id, rojas: x.rojas, verdes: x.verdes })) }).then(d => {
-      ocupado(false); recibir(d);
+      repartiendo = false; repartoAbierto = false; ocupado(false); recibir(d);
       const mr = D.paquetes.filter(p => p.estado === 'Pendiente' && p.color === 'Mixto' && p.rojas.length > p.verdes.length).length;
       const mv = D.paquetes.filter(p => p.estado === 'Pendiente' && p.color === 'Mixto' && p.verdes.length > p.rojas.length).length;
       avisoRico({ titulo: `Colores repartidos en ${plan.length} paquetes`, detalle: `${mr} con más rojas · ${mv} con más verdes`, tipo: 'ok', accion: 'Deshacer', fn: () => deshacerReparto(plan) });
-    }).catch(error);
+    }).catch(e => { repartiendo = false; pintar(D); error(e); });
   }
   function deshacerReparto(plan) {
-    ocupado(true);
+    if (repartiendo) return;
+    repartiendo = true; ocupado(true);
     api('reasignarColores', { items: plan.map(x => ({ id: x.id, rojas: x.antes.rojas, verdes: x.antes.verdes })) }).then(d => {
-      ocupado(false); recibir(d); aviso('Reparto deshecho. Los colores volvieron a como estaban.');
-    }).catch(error);
+      repartiendo = false; ocupado(false); recibir(d); aviso('Reparto deshecho. Los colores volvieron a como estaban.');
+    }).catch(e => { repartiendo = false; error(e); });
   }
 
   // Fueguito que se enciende al marcar un deseo
@@ -816,23 +829,25 @@
     const ctx = forms.sin, N = ctx.N;
     const tb = (v, on) => `<button type="button" class="${on ? 'on' : ''}" data-acc="ntam" data-v="${v}" aria-pressed="${on}">${v} velas</button>`;
     return `<div data-form="sin"><div class="f-lbl">Tamaño del paquete</div><div class="seg seg2 f-seg">${tb(5, N === 5)}${tb(7, N === 7)}</div>${deseosUI(ctx)}
-      <button type="button" class="btn main" data-acc="fguardar" ${ctx.sel.length === N ? '' : 'disabled'}>Guardar deseos</button>
+      <button type="button" class="btn main" data-acc="fguardar" ${ctx.sel.length === N && guardandoSin !== ctx.id ? '' : 'disabled'}>${guardandoSin === ctx.id ? SPIN + 'Guardando…' : 'Guardar deseos'}</button>
       ${ctx.sel.length === N ? '' : `<div class="f-hint">${ctx.sel.length > N ? `Desmarca ${ctx.sel.length - N}` : `Elige ${N - ctx.sel.length} más`}</div>`}</div>`;
   }
 
   async function guardarDeseos(p) {
+    if (guardandoSin) return;
     const ctx = forms.sin, c = decidirColores(ctx);
+    guardandoSin = p.id; pintar(D);
     const rojas = ctx.sel.filter((_, i) => c[i] === 'R'), verdes = ctx.sel.filter((_, i) => c[i] === 'V');
     await enviarCambios();
     ocupado(true);
     silenciar(p.id);
     api('editarPaquete', { id: p.id, tamano: ctx.N, color: ctx.color, rojas, verdes }).then(d => {
-      ocupado(false); forms.sin = null; abierto = null; recibir(d);
+      guardandoSin = null; ocupado(false); forms.sin = null; abierto = null; recibir(d);
       const q = D.paquetes.find(x => x.id === p.id), f = q ? faltan(q) : 0;
       avisoRico({ titulo: `Deseos de ${p.persona} guardados`,
         detalle: `${rojas.length} roja${rojas.length === 1 ? '' : 's'} y ${verdes.length} verde${verdes.length === 1 ? '' : 's'} · ${f ? `le falta${f === 1 ? '' : 'n'} ${f} vela${f === 1 ? '' : 's'}` : 'listo para armar'}`,
         tipo: f ? 'info' : 'ok', ver: p.id });
-    }).catch(error);
+    }).catch(e => { guardandoSin = null; pintar(D); error(e); });
   }
 
   // ---- Nuevo paquete: botón flotante + hoja inferior ----
@@ -905,24 +920,31 @@
     document.getElementById('nPt1').textContent = `${pl ? ctx.cant + ' paquetes' : 'Paquete'} de ${ctx.N} velas${nombre ? ' · ' + nombre : ''}`;
     document.getElementById('nPt2').textContent = `${({ Mixto: 'Mixto', Rojo: 'Todo rojo', Verde: 'Todo verde' })[ctx.color]} · ${ctx.modo === 'luego' ? 'deseos después' : okDeseos ? 'deseos completos' : `${ctx.sel.length} de ${ctx.N} deseos`}${pl ? ` · ${ctx.cant * ctx.N} velas` : ''}`;
     const btn = document.getElementById('nGuardar');
-    btn.disabled = !nombre || !okDeseos;
+    btn.disabled = guardandoNuevo || !nombre || !okDeseos;
     document.getElementById('nHint').textContent = !nombre ? 'Escribe el nombre del comprador' : !okDeseos ? (ctx.sel.length > ctx.N ? `Desmarca ${ctx.sel.length - ctx.N} deseos` : `Elige ${ctx.N - ctx.sel.length} deseos más`) : '';
   }
+  function nuevoTrabajando(on) {
+    guardandoNuevo = on;
+    const b = document.getElementById('nGuardar'), ed = forms.nuevo && forms.nuevo.editId;
+    if (on) { b.disabled = true; b.innerHTML = SPIN + (ed ? 'Guardando…' : 'Agregando…'); }
+    else { b.innerHTML = ed ? 'Guardar cambios' : '<i class="ti ti-plus" aria-hidden="true"></i> Agregar paquete'; resumenNuevo(); }
+  }
   async function guardarNuevo() {
-    const ctx = forms.nuevo; if (!ctx) return;
+    const ctx = forms.nuevo; if (!ctx || guardandoNuevo) return;
     const nombre = document.getElementById('nNombre').value.trim(); if (!nombre) return;
+    nuevoTrabajando(true);
     if (ctx.editId) {
       let rojas = [], verdes = [], rosadas = [];
       if (ctx.modo === 'ya') { const c = decidirColores(ctx); ctx.sel.forEach((w, i) => (c[i] === 'R' ? rojas : c[i] === 'P' ? rosadas : verdes).push(w)); }
       const id = ctx.editId, N = ctx.N, color = ctx.color, antesN = ctx.orig.N;
       await enviarCambios(); ocupado(true); silenciar(id);
       api('editarPaquete', { id, persona: nombre, tamano: N, color, rojas, verdes, rosadas }).then(d => {
-        ocupado(false); cerrarNuevo(); recibir(d);
+        guardandoNuevo = false; ocupado(false); cerrarNuevo(); recibir(d);
         const q = D.paquetes.find(x => x.id === id), f = q && q.estado === 'Pendiente' ? faltan(q) : 0;
         avisoRico({ titulo: `Paquete de ${nombre} actualizado`,
           detalle: `${antesN !== N ? `Ahora es de ${N} velas` : `${N} velas`} · ${color}${q && q.estado === 'Pendiente' ? (f ? ` · le falta${f === 1 ? '' : 'n'} ${f}` : ' · listo para armar') : ' · sin deseos'}`,
           tipo: 'ok', ver: id });
-      }).catch(error);
+      }).catch(e => { nuevoTrabajando(false); error(e); });
       return;
     }
     let paquetes = [];
@@ -937,7 +959,7 @@
     ocupado(true);
     const antes = new Set(D.paquetes.map(p => p.id));
     api('agregarPaquetes', { persona: nombre, tamano: ctx.N, cantidad: ctx.cant, color: ctx.color, paquetes }).then(d => {
-      ocupado(false);
+      guardandoNuevo = false; ocupado(false);
       d.paquetes.filter(p => !antes.has(p.id)).forEach(p => silenciar(p.id));
       const cant = ctx.cant, N = ctx.N, con = ctx.modo === 'ya';
       cerrarNuevo(); recibir(d);
@@ -946,7 +968,7 @@
       avisoRico({ titulo: cant > 1 ? `${cant} paquetes de ${nombre} agregados` : `Paquete de ${nombre} agregado`,
         detalle: `${cant * N} velas · ${con ? (listos === nuevos.length ? 'listo para armar' : listos ? `${listos} listo${listos > 1 ? 's' : ''} para armar` : 'quedó en Por armar') : 'quedó en Sin deseos'}`,
         tipo: 'ok', ver: nuevos[0] && nuevos[0].id });
-    }).catch(error);
+    }).catch(e => { nuevoTrabajando(false); error(e); });
   }
   document.getElementById('fab').addEventListener('click', () => abrirNuevo());
   document.getElementById('nNombre').addEventListener('input', resumenNuevo);
@@ -1049,6 +1071,10 @@
 
 
 
+
+  // Botones que esperan a Google: se bloquean y muestran que están trabajando (evita dobles toques)
+  let guardandoSin = null, guardandoNuevo = false, repartiendo = false;
+  const SPIN = '<span class="spin" aria-hidden="true"></span>';
 
   // ---- Acciones con respuesta inmediata: la pantalla cambia al tocar y luego se guarda en la hoja ----
   const hoy = () => { const d = new Date(); return String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear(); };
