@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Velas de deseos</title>
-<meta name="app-version" content="2026-11-22-botones-tactiles">
+<meta name="app-version" content="2026-11-25-paquete-6">
 <meta name="theme-color" content="#f6f3ee">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3/dist/tabler-icons.min.css">
 <style>
@@ -151,7 +151,7 @@
   .in{width:100%;height:48px;border-radius:12px;border:1px solid var(--line2);padding:0 14px;font-size:16px;color:var(--txt);background:#fff;font-family:inherit}
   .in:focus{outline:2px solid var(--acc);outline-offset:1px}
   .g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-  .seg2{grid-template-columns:1fr 1fr!important}
+  .seg2{grid-template-columns:1fr 1fr!important} .seg3{grid-template-columns:repeat(3,1fr)!important}
   .stp{display:flex;align-items:center;justify-content:space-between;border:1px solid var(--line2);border-radius:12px;height:46px;padding:0 3px;background:#fff}
   .stp button{width:40px;height:38px;border:none;background:#f1ece4;border-radius:9px;font-size:19px;color:var(--txt);cursor:pointer}
   .stp span{font-size:17px;font-weight:600;font-variant-numeric:tabular-nums}
@@ -775,7 +775,7 @@
     const plan = planReparto();
     if (!repartoAbierto) return `<button class="btn link reparto-link" data-acc="reparto">Repartir de nuevo los colores de los mixtos</button>`;
     const total = D.paquetes.filter(p => p.estado === 'Pendiente' && p.color === 'Mixto' && (p.rojas.length + p.verdes.length) % 2).length;
-    return `<div class="confirma reparto-box">La app va a alternar los paquetes <b>mixtos por armar</b>: uno con 4 rojas y 3 verdes, el siguiente con 3 rojas y 4 verdes, y así (en los de 5: 3 y 2). Cambian <b>${plan.length}</b> de ${total} paquetes. Los armados, entregados y pagados no se tocan.
+    return `<div class="confirma reparto-box">La app va a alternar los paquetes <b>mixtos por armar</b>: uno con 4 rojas y 3 verdes, el siguiente con 3 rojas y 4 verdes, y así (en los de 5: 3 y 2; los de 6 quedan 3 y 3). Cambian <b>${plan.length}</b> de ${total} paquetes. Los armados, entregados y pagados no se tocan.
       <div class="acc"><button class="btn" data-acc="repartoNo" ${repartiendo ? 'disabled' : ''}>Cancelar</button><button class="btn main" data-acc="repartoSi" ${repartiendo ? 'disabled' : ''}>${repartiendo ? SPIN + 'Repartiendo…' : 'Sí, repartir'}</button></div></div>`;
   }
   async function aplicarReparto() {
@@ -828,7 +828,7 @@
     if (!forms.sin || forms.sin.id !== p.id) abrirFormSin(p);
     const ctx = forms.sin, N = ctx.N;
     const tb = (v, on) => `<button type="button" class="${on ? 'on' : ''}" data-acc="ntam" data-v="${v}" aria-pressed="${on}">${v} velas</button>`;
-    return `<div data-form="sin"><div class="f-lbl">Tamaño del paquete</div><div class="seg seg2 f-seg">${tb(5, N === 5)}${tb(7, N === 7)}</div>${deseosUI(ctx)}
+    return `<div data-form="sin"><div class="f-lbl">Tamaño del paquete</div><div class="seg seg3 f-seg">${tb(5, N === 5)}${tb(6, N === 6)}${tb(7, N === 7)}</div>${deseosUI(ctx)}
       <button type="button" class="btn main" data-acc="fguardar" ${ctx.sel.length === N && guardandoSin !== ctx.id ? '' : 'disabled'}>${guardandoSin === ctx.id ? SPIN + 'Guardando…' : 'Guardar deseos'}</button>
       ${ctx.sel.length === N ? '' : `<div class="f-hint">${ctx.sel.length > N ? `Desmarca ${ctx.sel.length - N}` : `Elige ${N - ctx.sel.length} más`}</div>`}</div>`;
   }
@@ -885,7 +885,7 @@
     const mini = n => `<span class="n-mini" aria-hidden="true">${'<i></i>'.repeat(n)}</span>`;
     const opt = (acc, v, on, cont, t) => `<button type="button" class="n-opt ${on ? 'on' : ''}" data-acc="${acc}" data-v="${v}" aria-pressed="${on}">${cont}<span>${t}</span></button>`;
     const sw = bg => `<span class="n-sw" style="background:${bg}" aria-hidden="true"></span>`;
-    let h = `<div class="f-lbl n-lbl">Tamaño</div><div class="n-opts n-o2">${opt('ntam', 5, ctx.N === 5, mini(5), '5 velas')}${opt('ntam', 7, ctx.N === 7, mini(7), '7 velas')}</div>
+    let h = `<div class="f-lbl n-lbl">Tamaño</div><div class="n-opts n-o3">${opt('ntam', 5, ctx.N === 5, mini(5), '5 velas')}${opt('ntam', 6, ctx.N === 6, mini(6), '6 velas')}${opt('ntam', 7, ctx.N === 7, mini(7), '7 velas')}</div>
       <div class="f-lbl n-lbl">Color</div><div class="n-opts n-o3">
         ${opt('fcolorN', 'Mixto', ctx.color === 'Mixto', sw('linear-gradient(90deg,var(--rojo) 50%,var(--verde) 50%)'), 'Mixto')}
         ${opt('fcolorN', 'Rojo', ctx.color === 'Rojo', sw('var(--rojo)'), 'Todo rojo')}
